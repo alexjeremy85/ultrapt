@@ -1,6 +1,5 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 
@@ -24,68 +23,65 @@ export default async function PublicTrainerPage({
     .eq("slug", slug)
     .maybeSingle();
 
-  if (!trainer) {
-    notFound();
-  }
+  if (!trainer) notFound();
 
   return (
-    <main className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-3xl px-6 py-12">
-        <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
-          <div className="bg-gradient-to-br from-brand-dark via-brand to-brand-light px-6 py-12 text-white">
-            <div className="flex flex-col items-center gap-4 text-center">
-              <div className="h-28 w-28 overflow-hidden rounded-full border-4 border-white bg-slate-100">
-                {trainer.photo_url ? (
-                  <Image
-                    src={trainer.photo_url}
-                    alt={trainer.full_name}
-                    width={112}
-                    height={112}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-4xl text-slate-400">
-                    {trainer.full_name.charAt(0).toUpperCase()}
-                  </div>
-                )}
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold">{trainer.full_name}</h1>
-                {trainer.cref && (
-                  <p className="text-sm text-white/80">CREF {trainer.cref}</p>
-                )}
-                {(trainer.city || trainer.state) && (
-                  <p className="text-sm text-white/70">
-                    {[trainer.city, trainer.state].filter(Boolean).join(" / ")}
-                  </p>
-                )}
-              </div>
+    <main className="min-h-screen bg-bg">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 left-1/2 h-96 w-[600px] -translate-x-1/2 rounded-full bg-accent/20 blur-[120px]" />
+      </div>
+
+      <div className="relative mx-auto max-w-2xl px-5 py-10">
+        <div className="overflow-hidden rounded-3xl border border-border bg-bg-card shadow-2xl">
+          <div className="bg-gradient-hype px-6 pt-12 pb-16 text-center">
+            <div className="mx-auto h-28 w-28 overflow-hidden rounded-full border-4 border-black/30 bg-bg-surface shadow-2xl">
+              {trainer.photo_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={trainer.photo_url}
+                  alt={trainer.full_name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-4xl font-bold text-accent">
+                  {trainer.full_name.charAt(0).toUpperCase()}
+                </div>
+              )}
+            </div>
+            <h1 className="mt-4 text-3xl font-black text-black">
+              {trainer.full_name}
+            </h1>
+            <div className="mt-1 text-sm font-semibold text-black/70">
+              {trainer.cref && <span>CREF {trainer.cref}</span>}
+              {trainer.cref && (trainer.city || trainer.state) && (
+                <span> · </span>
+              )}
+              {(trainer.city || trainer.state) && (
+                <span>
+                  {[trainer.city, trainer.state].filter(Boolean).join(" / ")}
+                </span>
+              )}
             </div>
           </div>
 
-          <div className="space-y-6 p-6 md:p-8">
+          <div className="space-y-6 px-6 py-8">
             {trainer.bio && (
-              <p className="text-slate-700">{trainer.bio}</p>
+              <p className="text-center text-ink leading-relaxed">{trainer.bio}</p>
             )}
 
             {trainer.specialties && trainer.specialties.length > 0 && (
-              <Block title={t("PublicPage.specialties_label")}>
-                <div className="flex flex-wrap gap-2">
-                  {trainer.specialties.map((s: string) => (
-                    <span
-                      key={s}
-                      className="rounded-full bg-brand/10 px-3 py-1 text-xs font-medium text-brand-dark"
-                    >
-                      {s}
-                    </span>
-                  ))}
-                </div>
-              </Block>
+              <div className="flex flex-wrap justify-center gap-2">
+                {trainer.specialties.map((s: string) => (
+                  <span key={s} className="chip">
+                    {s}
+                  </span>
+                ))}
+              </div>
             )}
 
             {trainer.services_description && (
               <Block title={t("PublicPage.services_label")}>
-                <p className="whitespace-pre-line text-sm text-slate-700">
+                <p className="whitespace-pre-line text-ink-muted">
                   {trainer.services_description}
                 </p>
               </Block>
@@ -93,33 +89,33 @@ export default async function PublicTrainerPage({
 
             {trainer.pricing_summary && (
               <Block title={t("PublicPage.pricing_label")}>
-                <p className="text-sm text-slate-700">
+                <p className="text-2xl font-bold text-accent">
                   {trainer.pricing_summary}
                 </p>
               </Block>
             )}
 
-            <div className="rounded-xl bg-slate-50 p-6 text-center">
-              <p className="mb-4 text-sm text-slate-600">
+            <div className="rounded-2xl border border-accent/40 bg-accent/5 p-6 text-center">
+              <p className="mb-4 text-sm text-ink-muted">
                 {t("PublicPage.cta_subtitle")}
               </p>
               <Link
                 href={`/pt/${slug}/anamnese`}
-                className="inline-block rounded-md bg-brand px-6 py-3 font-medium text-white hover:bg-brand-dark"
+                className="btn-primary w-full text-base shadow-glow"
               >
-                {t("PublicPage.cta_quero_treinar")}
+                {t("PublicPage.cta_quero_treinar")} →
               </Link>
 
               {(trainer.whatsapp_phone || trainer.instagram_handle) && (
-                <div className="mt-4 flex justify-center gap-4 text-xs text-slate-500">
+                <div className="mt-4 flex justify-center gap-4 text-xs">
                   {trainer.whatsapp_phone && (
                     <a
                       href={`https://wa.me/55${trainer.whatsapp_phone}`}
                       target="_blank"
                       rel="noopener"
-                      className="hover:text-brand"
+                      className="text-ink-muted hover:text-accent"
                     >
-                      WhatsApp
+                      📱 WhatsApp
                     </a>
                   )}
                   {trainer.instagram_handle && (
@@ -127,15 +123,22 @@ export default async function PublicTrainerPage({
                       href={`https://instagram.com/${trainer.instagram_handle}`}
                       target="_blank"
                       rel="noopener"
-                      className="hover:text-brand"
+                      className="text-ink-muted hover:text-accent"
                     >
-                      @{trainer.instagram_handle}
+                      📷 @{trainer.instagram_handle}
                     </a>
                   )}
                 </div>
               )}
             </div>
           </div>
+        </div>
+
+        <div className="mt-8 text-center text-xs text-ink-dim">
+          Powered by{" "}
+          <Link href="/" className="text-accent hover:underline">
+            Ultra Personal Trainer
+          </Link>
         </div>
       </div>
     </main>
@@ -151,7 +154,7 @@ function Block({
 }) {
   return (
     <div>
-      <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+      <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink-dim">
         {title}
       </h2>
       {children}

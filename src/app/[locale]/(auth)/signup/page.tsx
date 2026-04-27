@@ -16,79 +16,68 @@ export default async function SignupPage({
 
   return (
     <>
-      <div className="mb-8 text-center">
-        <h1 className="text-2xl font-semibold text-slate-900">
-          {t("Auth.signup_title")}
-        </h1>
-        <p className="mt-2 text-sm text-slate-500">
+      <div className="mb-6 text-center">
+        <h1 className="text-2xl font-bold">{t("Auth.signup_title")}</h1>
+        <p className="mt-1 text-sm text-ink-muted">
           {t("Auth.signup_subtitle")}
         </p>
       </div>
 
       {error && (
-        <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger">
           {decodeURIComponent(error)}
         </div>
       )}
-
       {success && (
-        <div className="mb-4 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
+        <div className="mb-4 rounded-lg border border-success/40 bg-success/10 px-3 py-2 text-sm text-success">
           {decodeURIComponent(success)}
         </div>
       )}
 
       <form action={signup} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-slate-700">
-            {t("Auth.field_full_name")}
-          </label>
+          <label className="label">{t("Auth.field_full_name")}</label>
           <input
             name="full_name"
             type="text"
             required
             minLength={3}
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
+            className="input"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700">
-            {t("Auth.field_email_pro")}
-          </label>
+          <label className="label">{t("Auth.field_email_pro")}</label>
           <input
             name="email"
             type="email"
             autoComplete="email"
             required
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
+            className="input"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700">
-            {t("Auth.field_password")}
-          </label>
+          <label className="label">{t("Auth.field_password")}</label>
           <input
             name="password"
             type="password"
             autoComplete="new-password"
             required
             minLength={8}
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
+            className="input"
           />
-          <p className="mt-1 text-xs text-slate-500">
-            {t("Auth.field_password_hint")}
-          </p>
+          <p className="hint">{t("Auth.field_password_hint")}</p>
         </div>
-        <button
-          type="submit"
-          className="w-full rounded-md bg-brand px-4 py-2 font-medium text-white hover:bg-brand-dark"
-        >
-          {t("Auth.btn_signup")}
+        <button type="submit" className="btn-primary w-full">
+          {t("Auth.btn_signup")} →
         </button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-slate-500">
+      <p className="mt-6 text-center text-sm text-ink-muted">
         {t("Auth.has_account")}{" "}
-        <Link href="/login" className="font-medium text-brand hover:underline">
+        <Link
+          href="/login"
+          className="font-medium text-accent hover:text-accent-hover"
+        >
           {t("Auth.link_login")}
         </Link>
       </p>

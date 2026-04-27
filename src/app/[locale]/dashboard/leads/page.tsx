@@ -29,31 +29,29 @@ export default async function LeadsPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-slate-900">
-          {t("Leads.title")}
-        </h1>
-        <p className="text-sm text-slate-500">{t("Leads.subtitle")}</p>
+        <h1 className="text-2xl font-bold">{t("Leads.title")}</h1>
+        <p className="text-sm text-ink-muted">{t("Leads.subtitle")}</p>
       </div>
 
       {!leads || leads.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center">
-          <h2 className="text-lg font-medium text-slate-700">
-            {t("Leads.empty_title")}
-          </h2>
-          <p className="mt-2 text-sm text-slate-500">
+        <div className="card text-center py-16">
+          <div className="mb-3 text-4xl">👋</div>
+          <h2 className="text-lg font-semibold">{t("Leads.empty_title")}</h2>
+          <p className="mt-1 text-sm text-ink-muted">
             {t("Leads.empty_message")}
           </p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-          <ul className="divide-y divide-slate-200">
+        <div className="overflow-hidden rounded-xl border border-border bg-bg-card">
+          <ul className="divide-y divide-border">
             {leads.map((lead) => (
-              <li key={lead.id} className="flex items-center justify-between p-4">
+              <li
+                key={lead.id}
+                className="flex items-center justify-between p-4 hover:bg-bg-surface"
+              >
                 <div className="min-w-0 flex-1">
-                  <div className="font-medium text-slate-900">
-                    {lead.full_name}
-                  </div>
-                  <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+                  <div className="font-medium">{lead.full_name}</div>
+                  <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-ink-dim">
                     {lead.objective && (
                       <span>
                         {t("Leads.objective_label")}: {lead.objective}
@@ -83,7 +81,7 @@ export default async function LeadsPage({
                 </div>
                 <Link
                   href={`/dashboard/leads/${lead.id}`}
-                  className="ml-4 rounded-md border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-100"
+                  className="btn-secondary text-sm"
                 >
                   {t("Leads.btn_view")}
                 </Link>

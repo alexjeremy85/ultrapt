@@ -1,6 +1,6 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
-import { createClient } from "@/lib/supabase/server";
 import { Link } from "@/i18n/navigation";
+import { createClient } from "@/lib/supabase/server";
 import { ProfileForm } from "./ProfileForm";
 
 export default async function ProfilePage({
@@ -27,19 +27,17 @@ export default async function ProfilePage({
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">
-            {t("Profile.title")}
-          </h1>
-          <p className="text-sm text-slate-500">{t("Profile.subtitle")}</p>
+          <h1 className="text-2xl font-bold">{t("Profile.title")}</h1>
+          <p className="text-sm text-ink-muted">{t("Profile.subtitle")}</p>
         </div>
         <Link
           href={`/pt/${trainer!.slug}`}
           target="_blank"
-          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-100"
+          className="btn-secondary text-sm"
         >
-          {t("Profile.btn_view_public")}
+          {t("Profile.btn_view_public")} ↗
         </Link>
       </div>
 

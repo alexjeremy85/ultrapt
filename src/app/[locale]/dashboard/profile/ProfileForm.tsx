@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { updateProfile, uploadProfilePhoto } from "./actions";
 
@@ -40,20 +39,18 @@ export function ProfileForm({
 
   return (
     <div className="space-y-6">
-      {/* Foto */}
       <Section title={t("Profile.field_photo")}>
         <div className="flex items-center gap-4">
-          <div className="h-20 w-20 overflow-hidden rounded-full bg-slate-100">
+          <div className="h-20 w-20 overflow-hidden rounded-full bg-bg-elevated">
             {trainer.photo_url ? (
-              <Image
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
                 src={trainer.photo_url}
                 alt={trainer.full_name}
-                width={80}
-                height={80}
                 className="h-full w-full object-cover"
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center text-2xl text-slate-400">
+              <div className="flex h-full w-full items-center justify-center text-2xl font-bold text-accent">
                 {trainer.full_name.charAt(0).toUpperCase()}
               </div>
             )}
@@ -65,19 +62,15 @@ export function ProfileForm({
               type="file"
               accept="image/*"
               required
-              className="block text-sm text-slate-600 file:mr-3 file:rounded-md file:border file:border-slate-300 file:bg-white file:px-3 file:py-1.5 file:text-sm file:text-slate-700 hover:file:bg-slate-50"
+              className="block text-sm text-ink-muted file:mr-3 file:rounded-md file:border file:border-border file:bg-bg-elevated file:px-3 file:py-1.5 file:text-sm file:text-ink hover:file:border-accent"
             />
-            <button
-              type="submit"
-              className="rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-dark"
-            >
+            <button type="submit" className="btn-primary text-sm">
               {t("Common.save")}
             </button>
           </form>
         </div>
       </Section>
 
-      {/* Dados */}
       <form action={updateProfile} className="space-y-6">
         <Section title={t("Profile.section_basic")}>
           <Field label={t("Profile.field_full_name")}>
@@ -89,7 +82,11 @@ export function ProfileForm({
             />
           </Field>
           <Field label={t("Profile.field_cref")}>
-            <input name="cref" defaultValue={trainer.cref ?? ""} className="input" />
+            <input
+              name="cref"
+              defaultValue={trainer.cref ?? ""}
+              className="input"
+            />
           </Field>
         </Section>
 
@@ -101,7 +98,7 @@ export function ProfileForm({
               <button
                 type="button"
                 onClick={onCopy}
-                className="ml-2 text-xs text-brand hover:underline"
+                className="ml-2 text-xs text-accent hover:text-accent-hover"
               >
                 {copied ? t("Common.copied") : t("Common.copy")}
               </button>
@@ -183,7 +180,11 @@ export function ProfileForm({
               />
             </Field>
             <Field label={t("Profile.field_city")}>
-              <input name="city" defaultValue={trainer.city ?? ""} className="input" />
+              <input
+                name="city"
+                defaultValue={trainer.city ?? ""}
+                className="input"
+              />
             </Field>
             <Field label={t("Profile.field_state")}>
               <input
@@ -197,15 +198,11 @@ export function ProfileForm({
         </Section>
 
         <div className="flex justify-end">
-          <button
-            type="submit"
-            className="rounded-md bg-brand px-5 py-2 font-medium text-white hover:bg-brand-dark"
-          >
+          <button type="submit" className="btn-primary">
             {t("Profile.btn_save")}
           </button>
         </div>
       </form>
-
     </div>
   );
 }
@@ -218,8 +215,8 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-6">
-      <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500">
+    <div className="card">
+      <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-ink-dim">
         {title}
       </h2>
       <div className="space-y-4">{children}</div>
@@ -240,12 +237,12 @@ function Field({
 }) {
   return (
     <div>
-      <label className="flex items-center text-sm font-medium text-slate-700">
+      <label className="flex items-center label">
         {label}
         {extra}
       </label>
       {children}
-      {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
+      {hint && <p className="hint">{hint}</p>}
     </div>
   );
 }

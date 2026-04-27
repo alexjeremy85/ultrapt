@@ -18,24 +18,24 @@ export default async function AnamnesisPage({
   const supabase = await createClient();
   const { data: trainer } = await supabase
     .from("trainers")
-    .select("id, full_name, slug")
+    .select("id, full_name, slug, photo_url")
     .eq("slug", slug)
     .maybeSingle();
 
-  if (!trainer) {
-    notFound();
-  }
+  if (!trainer) notFound();
 
   if (success) {
     return (
-      <main className="min-h-screen bg-slate-50">
-        <div className="mx-auto max-w-2xl px-6 py-12">
-          <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
-            <div className="mb-4 text-5xl">✓</div>
-            <h1 className="text-2xl font-semibold text-slate-900">
+      <main className="min-h-screen bg-bg">
+        <div className="mx-auto max-w-xl px-5 py-16">
+          <div className="card text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success/15 text-3xl">
+              ✓
+            </div>
+            <h1 className="text-2xl font-bold">
               {t("Anamnesis.success_title")}
             </h1>
-            <p className="mt-2 text-slate-600">
+            <p className="mt-2 text-ink-muted">
               {t("Anamnesis.success_message", { trainerName: trainer.full_name })}
             </p>
           </div>
@@ -45,16 +45,30 @@ export default async function AnamnesisPage({
   }
 
   return (
-    <main className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-2xl px-6 py-12">
-        <div className="rounded-2xl bg-white p-6 shadow-sm md:p-8">
-          <div className="mb-6">
-            <h1 className="text-2xl font-semibold text-slate-900">
-              {t("Anamnesis.title")}
-            </h1>
-            <p className="mt-2 text-sm text-slate-500">
-              {t("Anamnesis.subtitle", { trainerName: trainer.full_name })}
-            </p>
+    <main className="min-h-screen bg-bg">
+      <div className="mx-auto max-w-2xl px-5 py-10">
+        <div className="card">
+          <div className="mb-6 flex items-center gap-3">
+            <div className="h-12 w-12 overflow-hidden rounded-full bg-bg-elevated">
+              {trainer.photo_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={trainer.photo_url}
+                  alt={trainer.full_name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-sm font-bold text-accent">
+                  {trainer.full_name.charAt(0).toUpperCase()}
+                </div>
+              )}
+            </div>
+            <div>
+              <h1 className="text-xl font-bold">{t("Anamnesis.title")}</h1>
+              <p className="text-sm text-ink-muted">
+                {t("Anamnesis.subtitle", { trainerName: trainer.full_name })}
+              </p>
+            </div>
           </div>
           <AnamnesisForm trainerId={trainer.id} slug={trainer.slug} />
         </div>
