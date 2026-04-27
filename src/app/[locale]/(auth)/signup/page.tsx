@@ -1,21 +1,27 @@
-import Link from "next/link";
+import { setRequestLocale, getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { signup } from "./actions";
 
 export default async function SignupPage({
+  params,
   searchParams,
 }: {
+  params: Promise<{ locale: string }>;
   searchParams: Promise<{ error?: string; success?: string }>;
 }) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations();
   const { error, success } = await searchParams;
 
   return (
     <>
       <div className="mb-8 text-center">
         <h1 className="text-2xl font-semibold text-slate-900">
-          Criar conta de Personal Trainer
+          {t("Auth.signup_title")}
         </h1>
         <p className="mt-2 text-sm text-slate-500">
-          14 dias gratis. Sem cartao de credito.
+          {t("Auth.signup_subtitle")}
         </p>
       </div>
 
@@ -34,7 +40,7 @@ export default async function SignupPage({
       <form action={signup} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-slate-700">
-            Nome completo
+            {t("Auth.field_full_name")}
           </label>
           <input
             name="full_name"
@@ -46,7 +52,7 @@ export default async function SignupPage({
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700">
-            E-mail profissional
+            {t("Auth.field_email_pro")}
           </label>
           <input
             name="email"
@@ -58,7 +64,7 @@ export default async function SignupPage({
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700">
-            Senha
+            {t("Auth.field_password")}
           </label>
           <input
             name="password"
@@ -68,20 +74,22 @@ export default async function SignupPage({
             minLength={8}
             className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
           />
-          <p className="mt-1 text-xs text-slate-500">Minimo de 8 caracteres.</p>
+          <p className="mt-1 text-xs text-slate-500">
+            {t("Auth.field_password_hint")}
+          </p>
         </div>
         <button
           type="submit"
           className="w-full rounded-md bg-brand px-4 py-2 font-medium text-white hover:bg-brand-dark"
         >
-          Criar conta
+          {t("Auth.btn_signup")}
         </button>
       </form>
 
       <p className="mt-6 text-center text-sm text-slate-500">
-        Ja tem conta?{" "}
+        {t("Auth.has_account")}{" "}
         <Link href="/login" className="font-medium text-brand hover:underline">
-          Fazer login
+          {t("Auth.link_login")}
         </Link>
       </p>
     </>

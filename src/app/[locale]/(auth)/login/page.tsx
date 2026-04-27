@@ -1,22 +1,26 @@
-import Link from "next/link";
+import { setRequestLocale, getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { login } from "./actions";
 
 export default async function LoginPage({
+  params,
   searchParams,
 }: {
+  params: Promise<{ locale: string }>;
   searchParams: Promise<{ error?: string }>;
 }) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations();
   const { error } = await searchParams;
 
   return (
     <>
       <div className="mb-8 text-center">
         <h1 className="text-2xl font-semibold text-slate-900">
-          Entrar no Ultra PT
+          {t("Auth.login_title")}
         </h1>
-        <p className="mt-2 text-sm text-slate-500">
-          Use o e-mail e senha cadastrados.
-        </p>
+        <p className="mt-2 text-sm text-slate-500">{t("Auth.login_subtitle")}</p>
       </div>
 
       {error && (
@@ -26,9 +30,10 @@ export default async function LoginPage({
       )}
 
       <form action={login} className="space-y-4">
+        <input type="hidden" name="locale" value={locale} />
         <div>
           <label className="block text-sm font-medium text-slate-700">
-            E-mail
+            {t("Auth.field_email")}
           </label>
           <input
             name="email"
@@ -40,7 +45,7 @@ export default async function LoginPage({
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700">
-            Senha
+            {t("Auth.field_password")}
           </label>
           <input
             name="password"
@@ -55,14 +60,14 @@ export default async function LoginPage({
           type="submit"
           className="w-full rounded-md bg-brand px-4 py-2 font-medium text-white hover:bg-brand-dark"
         >
-          Entrar
+          {t("Auth.btn_login")}
         </button>
       </form>
 
       <p className="mt-6 text-center text-sm text-slate-500">
-        Ainda nao tem conta?{" "}
+        {t("Auth.no_account")}{" "}
         <Link href="/signup" className="font-medium text-brand hover:underline">
-          Criar conta gratis
+          {t("Auth.link_signup")}
         </Link>
       </p>
     </>
