@@ -1,7 +1,18 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { routing } from "@/i18n/routing";
 
 type CookieToSet = { name: string; value: string; options: CookieOptions };
+
+function stripLocalePrefix(pathname: string): string {
+  for (const locale of routing.locales) {
+    if (pathname === `/${locale}`) return "/";
+    if (pathname.startsWith(`/${locale}/`)) {
+      return pathname.slice(locale.length + 1);
+    }
+  }
+  return pathname;
+}
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -31,9 +42,9 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const pathname = request.nextUrl.pathname;
-  const isAuthPage = pathname.startsWith("/login") || pathname.startsWith("/signup");
-  const isAppRoute = pathname.startsWith("/dashboard");
+  const path = stripLocalePrefix(request.nextUrl.pathname);
+  const isAuthPage = path.startsWith("/login") || path.startsWith("/signup");
+  const isAppRoute = path.startsWith("/dashboard");
 
   if (!user && isAppRoute) {
     const url = request.nextUrl.clone();
