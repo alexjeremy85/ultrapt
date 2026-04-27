@@ -216,6 +216,13 @@ export async function uploadCoverImage(formData: FormData) {
       .eq("id", user.id);
 
     if (updateError) {
+      const m = updateError.message || "";
+      if (m.includes("Could not find") || m.includes("does not exist")) {
+        resultPath = `/dashboard/profile?error=${encodeURIComponent(
+          "Imagem enviada, mas para usar capa rode a migration 0008_landing_templates.sql."
+        )}`;
+        throw new Error("done");
+      }
       resultPath = `/dashboard/profile?error=${encodeURIComponent(updateError.message)}`;
       throw new Error("done");
     }
@@ -303,7 +310,15 @@ export async function updateLandingCustomization(formData: FormData) {
       .eq("id", user.id);
 
     if (error) {
-      resultPath = `/dashboard/profile?error=${encodeURIComponent(error.message)}`;
+      // Erro tipico quando migration 0008 nao foi aplicada
+      const msg = error.message || "";
+      if (msg.includes("Could not find") || msg.includes("does not exist")) {
+        resultPath = `/dashboard/profile?error=${encodeURIComponent(
+          "Para salvar personalização avançada, rode a migration 0008_landing_templates.sql no Supabase SQL Editor."
+        )}`;
+      } else {
+        resultPath = `/dashboard/profile?error=${encodeURIComponent(msg)}`;
+      }
       throw new Error("done");
     }
 
