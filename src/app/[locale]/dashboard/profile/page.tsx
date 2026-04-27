@@ -5,12 +5,15 @@ import { ProfileForm } from "./ProfileForm";
 
 export default async function ProfilePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ error?: string; success?: string }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations();
+  const { error, success } = await searchParams;
 
   const supabase = await createClient();
   const {
@@ -40,6 +43,17 @@ export default async function ProfilePage({
           {t("Profile.btn_view_public")} ↗
         </Link>
       </div>
+
+      {error && (
+        <div className="rounded-lg border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-danger">
+          {decodeURIComponent(error)}
+        </div>
+      )}
+      {success && (
+        <div className="rounded-lg border border-success/40 bg-success/10 px-4 py-3 text-sm text-success">
+          {decodeURIComponent(success)}
+        </div>
+      )}
 
       <ProfileForm trainer={trainer!} publicUrl={publicUrl} />
     </div>
