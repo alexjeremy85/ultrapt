@@ -143,6 +143,10 @@ export async function asaasGetPaymentPixQr(
   return asaasFetch(`/payments/${paymentId}/pixQrCode`);
 }
 
+export async function asaasGetPayment(paymentId: string): Promise<AsaasPayment> {
+  return asaasFetch<AsaasPayment>(`/payments/${paymentId}`);
+}
+
 /**
  * Lista os pagamentos de uma assinatura.
  * Apos criar a subscription, usamos isso pra pegar o invoiceUrl da

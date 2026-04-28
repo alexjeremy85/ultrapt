@@ -1,9 +1,19 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { PLANS, type PlanId } from "@/lib/plans";
-import { startSubscription, checkVoucher, refreshInvoiceUrl, type VoucherCheckResult } from "./actions";
+import {
+  startSubscription,
+  checkVoucher,
+  getPaymentStatus,
+  refreshPixQr,
+  cancelSubscription,
+  type VoucherCheckResult,
+  type StartSubscriptionResult,
+  type SubscriptionDetails,
+} from "./actions";
 
 function maskCpf(value: string): string {
   const digits = value.replace(/\D/g, "").slice(0, 11);
@@ -15,11 +25,28 @@ function maskCpf(value: string): string {
 }
 
 function formatBrl(value: number): string {
-  return value.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
+  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function formatDateBr(iso: string | null): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
   });
 }
+
+type PixData = {
+  paymentId: string;
+  qrImage: string;
+  qrPayload: string;
+  expiresAt: string;
+  value: number;
+  planId: PlanId;
+};
 
 export function BillingClient({
   status,
@@ -27,16 +54,17 @@ export function BillingClient({
   daysLeft,
   savedCpf,
   voucherUsed,
-  invoiceUrl,
+  subscriptionDetails,
 }: {
   status: string;
   currentPlan: PlanId;
   daysLeft: number;
   savedCpf: string | null;
   voucherUsed: string | null;
-  invoiceUrl: string | null;
+  subscriptionDetails: SubscriptionDetails | null;
 }) {
   const t = useTranslations();
+  const router = useRouter();
   const [cpf, setCpf] = useState(savedCpf ? maskCpf(savedCpf) : "");
   const [voucher, setVoucher] = useState("");
   const [voucherSelectedPlan, setVoucherSelectedPlan] = useState<PlanId>("pro");
@@ -44,9 +72,33 @@ export function BillingClient({
   const [validating, setValidating] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [submittingPlan, setSubmittingPlan] = useState<PlanId | null>(null);
+  const [pixData, setPixData] = useState<PixData | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const cpfDigits = cpf.replace(/\D/g, "");
   const cpfReady = cpfDigits.length === 11;
+
+  // Se tem cobrança pendente, busca o QR do Pix automaticamente
+  useEffect(() => {
+    if (status !== "pending_payment" || pixData) return;
+    let cancelled = false;
+    (async () => {
+      const r = await refreshPixQr();
+      if (!cancelled && r.ok) {
+        setPixData({
+          paymentId: r.paymentId,
+          qrImage: r.qrImage,
+          qrPayload: r.qrPayload,
+          expiresAt: r.expiresAt,
+          value: subscriptionDetails?.value ?? 0,
+          planId: currentPlan,
+        });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [status, pixData, currentPlan, subscriptionDetails?.value]);
 
   const onValidateVoucher = async (planForCheck: PlanId) => {
     const code = voucher.trim().toUpperCase();
@@ -63,19 +115,33 @@ export function BillingClient({
 
   const handleSubscribe = (planId: PlanId) => {
     if (!cpfReady) {
-      alert("Informe seu CPF antes de assinar.");
+      setErrorMsg("Informe seu CPF antes de assinar.");
       return;
     }
+    setErrorMsg(null);
     setSubmittingPlan(planId);
-    const fd = new FormData();
-    fd.append("plan_id", planId);
-    fd.append("cpf", cpfDigits);
-    if (voucherResult?.ok && voucher.trim()) {
-      fd.append("voucher_code", voucher.trim().toUpperCase());
-    }
     startTransition(async () => {
-      await startSubscription(fd);
+      const result: StartSubscriptionResult = await startSubscription({
+        planId,
+        cpf: cpfDigits,
+        voucherCode:
+          voucherResult?.ok && voucher.trim()
+            ? voucher.trim().toUpperCase()
+            : undefined,
+      });
       setSubmittingPlan(null);
+      if (result.ok) {
+        setPixData({
+          paymentId: result.paymentId,
+          qrImage: result.qrImage,
+          qrPayload: result.qrPayload,
+          expiresAt: result.expiresAt,
+          value: result.value,
+          planId: result.planId,
+        });
+      } else {
+        setErrorMsg(result.reason);
+      }
     });
   };
 
@@ -84,8 +150,33 @@ export function BillingClient({
     voucher.trim().length > 0 &&
     voucherSelectedPlan != null;
 
+  // Quando status === "active" → mostra painel de assinatura
+  if (status === "active" && subscriptionDetails) {
+    return (
+      <ActiveSubscriptionPanel
+        details={subscriptionDetails}
+        currentPlan={currentPlan}
+        onChange={() => router.refresh()}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
+      {pixData && (
+        <PixPaymentModal
+          data={pixData}
+          onClose={() => {
+            setPixData(null);
+            router.refresh();
+          }}
+          onPaid={() => {
+            setPixData(null);
+            router.refresh();
+          }}
+        />
+      )}
+
       <div className="card">
         <div className="flex items-center justify-between">
           <div>
@@ -104,10 +195,23 @@ export function BillingClient({
             {t("Billing.trial_subtitle")}
           </p>
         )}
-        {status === "pending_payment" && (
-          <PendingPaymentCta initialUrl={invoiceUrl} />
+        {status === "pending_payment" && !pixData && (
+          <div className="mt-4 rounded-xl border border-warning/40 bg-warning/10 p-4 text-sm">
+            <div className="font-bold text-warning">
+              ⏰ Sua assinatura está aguardando pagamento
+            </div>
+            <p className="mt-1 text-xs text-ink-muted">
+              Carregando QR Code do Pix...
+            </p>
+          </div>
         )}
       </div>
+
+      {errorMsg && (
+        <div className="rounded-lg border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-danger">
+          {errorMsg}
+        </div>
+      )}
 
       {/* CPF */}
       <div className="card">
@@ -115,7 +219,7 @@ export function BillingClient({
           Dados de pagamento
         </h3>
         <p className="mt-1 text-sm text-ink-muted">
-          O CPF é exigido para emissão da cobrança (Pix ou cartão).
+          O CPF é exigido para emissão da cobrança Pix.
         </p>
         <div className="mt-3 max-w-xs">
           <label className="label">CPF do titular</label>
@@ -240,16 +344,18 @@ export function BillingClient({
                     </span>
                     <div className="mt-1">
                       <span className="text-3xl font-black text-success">
-                        {formatBrl(voucherResult!.ok ? voucherResult!.finalPrice : p.price)}
+                        {formatBrl(
+                          voucherResult!.ok
+                            ? voucherResult!.finalPrice
+                            : p.price
+                        )}
                       </span>
                       <span className="text-sm text-ink-dim"> hoje</span>
                     </div>
                   </>
                 ) : (
                   <>
-                    <span className="text-3xl font-black">
-                      R$ {p.price}
-                    </span>
+                    <span className="text-3xl font-black">R$ {p.price}</span>
                     <span className="text-sm text-ink-dim"> / mês</span>
                   </>
                 )}
@@ -276,17 +382,15 @@ export function BillingClient({
                 <li>✓ Multi-idioma (PT/EN/ES)</li>
               </ul>
 
-              {voucher.trim() &&
-                !voucherUsed &&
-                !showVoucherPrice && (
-                  <button
-                    type="button"
-                    onClick={() => onValidateVoucher(planId)}
-                    className="mt-3 text-xs text-accent hover:underline"
-                  >
-                    Aplicar cupom neste plano →
-                  </button>
-                )}
+              {voucher.trim() && !voucherUsed && !showVoucherPrice && (
+                <button
+                  type="button"
+                  onClick={() => onValidateVoucher(planId)}
+                  className="mt-3 text-xs text-accent hover:underline"
+                >
+                  Aplicar cupom neste plano →
+                </button>
+              )}
 
               <button
                 onClick={() => handleSubscribe(planId)}
@@ -298,16 +402,20 @@ export function BillingClient({
                 }`}
               >
                 {submitting
-                  ? "Processando..."
+                  ? "Gerando Pix..."
                   : isCurrent
                   ? t("Billing.current_plan")
                   : !cpfReady
                   ? "Preencha o CPF acima"
                   : showVoucherPrice
-                  ? `Assinar por ${formatBrl(voucherResult!.ok ? voucherResult!.finalPrice : p.price)}`
+                  ? `Pagar ${formatBrl(
+                      voucherResult!.ok
+                        ? voucherResult!.finalPrice
+                        : p.price
+                    )} com Pix`
                   : status === "active"
                   ? t("Billing.btn_change_plan")
-                  : t("Billing.btn_choose_plan")}
+                  : `Pagar com Pix`}
               </button>
             </div>
           );
@@ -319,18 +427,12 @@ export function BillingClient({
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; className: string }> = {
-    trialing: {
-      label: "Em trial",
-      className: "bg-accent/15 text-accent",
-    },
+    trialing: { label: "Em trial", className: "bg-accent/15 text-accent" },
     pending_payment: {
       label: "Aguardando pagamento",
       className: "bg-warning/15 text-warning",
     },
-    active: {
-      label: "Ativo",
-      className: "bg-success/15 text-success",
-    },
+    active: { label: "Ativo", className: "bg-success/15 text-success" },
     past_due: {
       label: "Pagamento pendente",
       className: "bg-warning/15 text-warning",
@@ -339,10 +441,7 @@ function StatusBadge({ status }: { status: string }) {
       label: "Trial expirado",
       className: "bg-danger/15 text-danger",
     },
-    canceled: {
-      label: "Cancelado",
-      className: "bg-bg-elevated text-ink-dim",
-    },
+    canceled: { label: "Cancelado", className: "bg-bg-elevated text-ink-dim" },
   };
   const info = map[status] ?? map.trialing;
   return (
@@ -354,52 +453,366 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function PendingPaymentCta({ initialUrl }: { initialUrl: string | null }) {
-  const [url, setUrl] = useState<string | null>(initialUrl);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+/**
+ * Modal de pagamento Pix: mostra QR + copia e cola, faz polling de status,
+ * exibe sucesso quando confirmado.
+ */
+function PixPaymentModal({
+  data,
+  onClose,
+  onPaid,
+}: {
+  data: PixData;
+  onClose: () => void;
+  onPaid: () => void;
+}) {
+  const [copied, setCopied] = useState(false);
+  const [paid, setPaid] = useState(false);
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
+  const [pollMsg, setPollMsg] = useState("Aguardando pagamento...");
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleRefresh = async () => {
-    setLoading(true);
-    setError(null);
-    const res = await refreshInvoiceUrl();
-    setLoading(false);
-    if (res.ok) {
-      setUrl(res.url);
-      window.open(res.url, "_blank", "noopener,noreferrer");
-    } else {
-      setError(res.reason);
+  // Countdown ate expirar
+  useEffect(() => {
+    const exp = new Date(data.expiresAt).getTime();
+    const tick = () => {
+      const ms = exp - Date.now();
+      setSecondsLeft(Math.max(0, Math.floor(ms / 1000)));
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [data.expiresAt]);
+
+  // Polling de status
+  useEffect(() => {
+    if (paid) return;
+    let cancelled = false;
+    const poll = async () => {
+      const r = await getPaymentStatus();
+      if (cancelled) return;
+      if (r.ok && r.paid) {
+        setPaid(true);
+        setPollMsg("✓ Pagamento confirmado!");
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        setTimeout(() => onPaid(), 2000);
+      }
+    };
+    poll();
+    intervalRef.current = setInterval(poll, 4000);
+    return () => {
+      cancelled = true;
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [paid, onPaid]);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(data.qrPayload);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // ignore
     }
   };
 
+  const minutes = secondsLeft != null ? Math.floor(secondsLeft / 60) : null;
+  const seconds = secondsLeft != null ? secondsLeft % 60 : null;
+
   return (
-    <div className="mt-4 rounded-xl border border-warning/40 bg-warning/10 p-4">
-      <div className="text-sm font-bold text-warning">
-        ⏰ Sua assinatura está aguardando pagamento
-      </div>
-      <p className="mt-1 text-xs text-ink-muted">
-        Pague hoje (Pix ou cartão) e o acesso ativa em segundos.
-      </p>
-      {url ? (
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn-primary mt-3 inline-flex"
-        >
-          💳 Pagar agora
-        </a>
-      ) : (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="card relative w-full max-w-md max-h-[90vh] overflow-y-auto">
         <button
-          onClick={handleRefresh}
-          disabled={loading}
-          className="btn-primary mt-3 inline-flex disabled:opacity-50"
+          type="button"
+          onClick={onClose}
+          className="absolute right-3 top-3 text-ink-dim hover:text-ink"
+          aria-label="Fechar"
         >
-          {loading ? "Buscando link..." : "💳 Buscar link de pagamento"}
+          ✕
         </button>
-      )}
-      {error && <p className="mt-2 text-xs text-danger">{error}</p>}
+
+        {paid ? (
+          <div className="py-8 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success/20 text-4xl">
+              ✓
+            </div>
+            <h2 className="text-xl font-bold text-success">
+              Pagamento confirmado!
+            </h2>
+            <p className="mt-2 text-sm text-ink-muted">
+              Sua assinatura está ativa. Atualizando...
+            </p>
+          </div>
+        ) : (
+          <>
+            <h2 className="text-lg font-bold">Pague com Pix</h2>
+            <p className="mt-1 text-sm text-ink-muted">
+              {PLANS[data.planId].name} —{" "}
+              <strong className="text-ink">{formatBrl(data.value)}</strong>
+            </p>
+
+            <div className="mt-4 flex justify-center rounded-xl bg-white p-4">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`data:image/png;base64,${data.qrImage}`}
+                alt="QR Code Pix"
+                className="h-56 w-56"
+              />
+            </div>
+
+            <div className="mt-4">
+              <label className="label">Pix Copia e Cola</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={data.qrPayload}
+                  className="input flex-1 font-mono text-xs"
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                />
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  className="btn-primary"
+                >
+                  {copied ? "✓ Copiado" : "Copiar"}
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-lg border border-bg-elevated bg-bg-elevated/50 p-3 text-xs text-ink-muted">
+              <div className="flex items-center gap-2">
+                <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-warning" />
+                {pollMsg}
+              </div>
+              {minutes != null && seconds != null && secondsLeft! > 0 && (
+                <div className="mt-1">
+                  Expira em{" "}
+                  <strong>
+                    {String(minutes).padStart(2, "0")}:
+                    {String(seconds).padStart(2, "0")}
+                  </strong>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-4 space-y-2 text-xs text-ink-muted">
+              <div>1. Abra o app do seu banco</div>
+              <div>2. Escolha pagar com Pix → Copia e Cola (ou QR Code)</div>
+              <div>3. Confirme o pagamento — a tela atualiza sozinha</div>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
 
+/**
+ * Painel mostrado quando subscription_status === "active":
+ * plano, valor, próxima cobrança, histórico, botão de cancelar.
+ */
+function ActiveSubscriptionPanel({
+  details,
+  currentPlan,
+  onChange,
+}: {
+  details: SubscriptionDetails;
+  currentPlan: PlanId;
+  onChange: () => void;
+}) {
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  const [canceling, setCanceling] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleCancel = async () => {
+    setCanceling(true);
+    setError(null);
+    const r = await cancelSubscription();
+    setCanceling(false);
+    if (r.ok) {
+      onChange();
+    } else {
+      setError(r.reason);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="card border-success/40 bg-success/5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">✓</span>
+              <h2 className="text-xl font-bold text-success">
+                Assinatura ativa
+              </h2>
+            </div>
+            <p className="mt-1 text-sm text-ink-muted">
+              Você tem acesso completo ao Ultra PT.
+            </p>
+          </div>
+          <StatusBadge status="active" />
+        </div>
+
+        <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <Stat label="Plano atual" value={PLANS[currentPlan].name} />
+          <Stat label="Valor mensal" value={formatBrl(details.value)} />
+          <Stat
+            label="Próxima cobrança"
+            value={formatDateBr(details.nextDueDate)}
+          />
+        </div>
+      </div>
+
+      <div className="card">
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-ink-dim">
+          Histórico de pagamentos
+        </h3>
+
+        {details.payments.length === 0 ? (
+          <p className="mt-3 text-sm text-ink-muted">
+            Nenhum pagamento registrado ainda.
+          </p>
+        ) : (
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-bg-elevated text-left text-xs uppercase text-ink-dim">
+                  <th className="pb-2 pr-4">Vencimento</th>
+                  <th className="pb-2 pr-4">Pago em</th>
+                  <th className="pb-2 pr-4">Valor</th>
+                  <th className="pb-2 pr-4">Status</th>
+                  <th className="pb-2"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {details.payments.map((p) => (
+                  <tr
+                    key={p.id}
+                    className="border-b border-bg-elevated/50 last:border-0"
+                  >
+                    <td className="py-2 pr-4">{formatDateBr(p.dueDate)}</td>
+                    <td className="py-2 pr-4 text-ink-muted">
+                      {formatDateBr(p.paymentDate)}
+                    </td>
+                    <td className="py-2 pr-4 font-medium">
+                      {formatBrl(p.value)}
+                    </td>
+                    <td className="py-2 pr-4">
+                      <PaymentStatusBadge status={p.status} />
+                    </td>
+                    <td className="py-2 text-right">
+                      {p.invoiceUrl && (
+                        <a
+                          href={p.invoiceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-accent hover:underline"
+                        >
+                          Ver →
+                        </a>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      <div className="card border-danger/30">
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-ink-dim">
+          Cancelar assinatura
+        </h3>
+        <p className="mt-1 text-sm text-ink-muted">
+          Você manterá acesso até o fim do ciclo atual. Não há reembolso
+          proporcional.
+        </p>
+
+        {error && (
+          <p className="mt-2 text-sm text-danger">{error}</p>
+        )}
+
+        {!confirmCancel ? (
+          <button
+            type="button"
+            onClick={() => setConfirmCancel(true)}
+            className="btn-secondary mt-3 border-danger/40 text-danger"
+          >
+            Cancelar assinatura
+          </button>
+        ) : (
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={handleCancel}
+              disabled={canceling}
+              className="btn-primary bg-danger hover:bg-danger/90"
+            >
+              {canceling ? "Cancelando..." : "Confirmar cancelamento"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmCancel(false)}
+              disabled={canceling}
+              className="btn-secondary"
+            >
+              Voltar
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div className="text-xs uppercase tracking-wider text-ink-dim">
+        {label}
+      </div>
+      <div className="mt-1 text-lg font-bold">{value}</div>
+    </div>
+  );
+}
+
+function PaymentStatusBadge({ status }: { status: string }) {
+  const map: Record<string, { label: string; className: string }> = {
+    RECEIVED: { label: "Pago", className: "bg-success/15 text-success" },
+    CONFIRMED: { label: "Pago", className: "bg-success/15 text-success" },
+    RECEIVED_IN_CASH: {
+      label: "Pago",
+      className: "bg-success/15 text-success",
+    },
+    PENDING: {
+      label: "Pendente",
+      className: "bg-warning/15 text-warning",
+    },
+    OVERDUE: {
+      label: "Vencido",
+      className: "bg-danger/15 text-danger",
+    },
+    REFUNDED: {
+      label: "Reembolsado",
+      className: "bg-bg-elevated text-ink-dim",
+    },
+  };
+  const info = map[status] ?? {
+    label: status,
+    className: "bg-bg-elevated text-ink-dim",
+  };
+  return (
+    <span
+      className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium uppercase ${info.className}`}
+    >
+      {info.label}
+    </span>
+  );
+}
