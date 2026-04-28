@@ -29,16 +29,19 @@ type AsaasEvent = {
 };
 
 export async function POST(request: Request) {
-  // Validacao opcional via token. Asaas suporta passar header `asaas-access-token`
+  // Token obrigatorio. Fail-closed se a env nao estiver configurada
+  // (impede bypass por config drift).
   const expected = process.env.ASAAS_WEBHOOK_TOKEN;
-  if (expected) {
-    const got = request.headers.get("asaas-access-token");
-    if (got !== expected) {
-      return NextResponse.json(
-        { error: "invalid token" },
-        { status: 401 }
-      );
-    }
+  if (!expected) {
+    console.error("[asaas-webhook] ASAAS_WEBHOOK_TOKEN nao configurado");
+    return NextResponse.json(
+      { error: "server misconfigured" },
+      { status: 500 }
+    );
+  }
+  const got = request.headers.get("asaas-access-token");
+  if (got !== expected) {
+    return NextResponse.json({ error: "invalid token" }, { status: 401 });
   }
 
   let body: AsaasEvent;

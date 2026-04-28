@@ -2,11 +2,26 @@
 
 import { getLocale } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
-import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024; // 5MB
 const ALLOWED_PHOTO_MIME = ["image/jpeg", "image/png", "image/webp"];
+
+// Whitelist de campos que o cliente anonimo pode enviar
+const ALLOWED_FORM_FIELDS = new Set([
+  "full_name", "email", "phone", "birth_date", "gender",
+  "weight", "height", "objective", "objective_detail",
+  "experience", "training_practiced", "training_detail",
+  "where_train", "days_available", "time_per_session",
+  "exercises_likes", "exercises_dislikes",
+  "health_conditions", "health_detail", "medications",
+  "injuries", "recent_surgery", "nutritionist",
+  "medical_clearance", "stress_level",
+  "birth_control", "menopause", "cycle_variation", "pcos",
+  "diet", "meals_per_day", "alcohol", "smoking",
+  "water_liters", "sleep_hours", "sleep_quality",
+  "extra_info", "commitment", "consent",
+]);
 
 export async function submitAnamnesis(formData: FormData) {
   const locale = await getLocale();
@@ -17,11 +32,11 @@ export async function submitAnamnesis(formData: FormData) {
     redirect({ href: "/", locale });
   }
 
-  // Coleta tudo no formulario (exceto trainer_id, slug e photo) como anamnesis_data
+  // Coleta APENAS campos da whitelist (impede o cliente injetar
+  // user_id, access_code, status, tags, etc).
   const data: Record<string, unknown> = {};
-  const skipKeys = new Set(["trainer_id", "slug", "photo"]);
   formData.forEach((value, key) => {
-    if (skipKeys.has(key)) return;
+    if (!ALLOWED_FORM_FIELDS.has(key)) return;
     if (typeof value !== "string") return;
     if (data[key] !== undefined) {
       const existing = data[key];
@@ -75,8 +90,20 @@ export async function submitAnamnesis(formData: FormData) {
     }
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase.from("students").insert({
+  // Valida que o trainer existe (impede inserir lixo em conta inexistente)
+  const admin2 = createAdminClient();
+  const { data: trainerExists } = await admin2
+    .from("trainers")
+    .select("id")
+    .eq("id", trainerId)
+    .maybeSingle();
+  if (!trainerExists) {
+    redirect({ href: `/`, locale });
+  }
+
+  // Insert via admin client com whitelist explicita de colunas.
+  // (RLS anon insert sera revogada via migration 0013)
+  const { error } = await admin2.from("students").insert({
     trainer_id: trainerId,
     full_name: fullName,
     email,
@@ -93,6 +120,7 @@ export async function submitAnamnesis(formData: FormData) {
     photo_url: photoUrl,
     anamnesis_data: data,
     anamnesis_submitted_at: new Date().toISOString(),
+    // user_id e access_code ficam null/default - o cliente NUNCA controla
   });
 
   if (error) {

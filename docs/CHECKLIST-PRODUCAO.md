@@ -44,8 +44,10 @@ Depois disso, **redeploy** para aplicar as variáveis.
    - **URL:** `https://project-pwzai.vercel.app/api/webhooks/asaas`
      - (ou seu domínio próprio se já tiver)
    - **Versão da API:** v3
-   - **Token de autenticação:** `e3cd5508b25e31e95e6f53fba904bde6159e7600eeba6e2ede015c0aa89ca39c`
-     - (mesmo que está em `ASAAS_WEBHOOK_TOKEN` na Vercel)
+   - **Token de autenticação:** gere um novo token aleatório (`openssl rand -hex 32`) e use o MESMO valor em:
+     - **Asaas** → campo "Token de autenticação" deste webhook
+     - **Vercel** → env var `ASAAS_WEBHOOK_TOKEN` (Production/Preview/Development)
+     - **Não comitar este valor em arquivo nenhum.**
    - **Tipo de envio:** Não sequencial
    - **Fila ativada:** sim
 3. **Eventos** — marque pelo menos:
