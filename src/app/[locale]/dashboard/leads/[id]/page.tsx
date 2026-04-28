@@ -39,17 +39,35 @@ export default async function LeadDetailPage({
       </Link>
 
       <div className="card">
-        <h1 className="text-2xl font-bold">{lead.full_name}</h1>
-        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-ink-muted">
-          {lead.email && <span>{lead.email}</span>}
-          {lead.phone && <span>WhatsApp: {lead.phone}</span>}
+        <div className="flex items-start gap-4">
+          <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full bg-bg-elevated">
+            {lead.photo_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={lead.photo_url}
+                alt={lead.full_name}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-xl font-bold text-accent">
+                {lead.full_name.charAt(0).toUpperCase()}
+              </div>
+            )}
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold">{lead.full_name}</h1>
+            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-ink-muted">
+              {lead.email && <span>{lead.email}</span>}
+              {lead.phone && <span>WhatsApp: {lead.phone}</span>}
+            </div>
+          </div>
         </div>
 
         <dl className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
           {Object.entries(data)
             .filter(
               ([k]) =>
-                !["full_name", "email", "phone", "trainer_id", "slug"].includes(k)
+                !["full_name", "email", "phone", "trainer_id", "slug", "photo_url"].includes(k)
             )
             .map(([k, v]) => (
               <div key={k} className="rounded-lg border border-border bg-bg-surface p-3">

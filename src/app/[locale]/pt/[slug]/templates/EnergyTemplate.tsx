@@ -1,8 +1,11 @@
 import { Link } from "@/i18n/navigation";
+import { ensureReadableOnDark, contrastingTextColor } from "@/lib/colorContrast";
 import type { TemplateProps } from "./types";
 
 export function EnergyTemplate({ trainer, ctaUrl }: TemplateProps) {
-  const accent = trainer.accent_color ?? "#10b981";
+  const rawAccent = trainer.accent_color ?? "#10b981";
+  const accent = ensureReadableOnDark(rawAccent);
+  const ctaTextColor = contrastingTextColor(accent);
   const headline = trainer.headline ?? trainer.full_name;
   const sub = trainer.subheadline ?? trainer.bio;
   const cta = trainer.cta_text ?? "QUERO COMEÇAR AGORA";
@@ -246,9 +249,10 @@ export function EnergyTemplate({ trainer, ctaUrl }: TemplateProps) {
           <div className="mt-8">
             <Link
               href={ctaUrl}
-              className="inline-flex items-center gap-2 rounded-lg px-8 py-4 text-base font-black uppercase tracking-wider text-black transition active:translate-y-px"
+              className="inline-flex items-center gap-2 rounded-lg px-8 py-4 text-base font-black uppercase tracking-wider transition active:translate-y-px"
               style={{
                 background: accent,
+                color: ctaTextColor,
                 boxShadow: `0 0 50px 0 ${accent}66`,
               }}
             >

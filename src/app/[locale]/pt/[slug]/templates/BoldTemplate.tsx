@@ -1,8 +1,11 @@
 import { Link } from "@/i18n/navigation";
+import { ensureReadableOnDark, contrastingTextColor } from "@/lib/colorContrast";
 import type { TemplateProps } from "./types";
 
 export function BoldTemplate({ trainer, ctaUrl }: TemplateProps) {
-  const accent = trainer.accent_color ?? "#ff6b00";
+  const rawAccent = trainer.accent_color ?? "#ff6b00";
+  const accent = ensureReadableOnDark(rawAccent);
+  const ctaTextColor = contrastingTextColor(accent);
   const headline = trainer.headline ?? trainer.full_name;
   const sub = trainer.subheadline ?? trainer.bio;
   const cta = trainer.cta_text ?? "Quero treinar com você";
@@ -179,9 +182,10 @@ export function BoldTemplate({ trainer, ctaUrl }: TemplateProps) {
               </p>
               <Link
                 href={ctaUrl}
-                className="inline-flex w-full items-center justify-center rounded-lg px-6 py-3.5 font-semibold text-black transition active:translate-y-px"
+                className="inline-flex w-full items-center justify-center rounded-lg px-6 py-3.5 font-semibold transition active:translate-y-px"
                 style={{
                   background: accent,
+                  color: ctaTextColor,
                   boxShadow: `0 0 30px 0 ${accent}66`,
                 }}
               >

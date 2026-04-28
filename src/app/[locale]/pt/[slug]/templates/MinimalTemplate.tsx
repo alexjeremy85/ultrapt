@@ -1,8 +1,11 @@
 import { Link } from "@/i18n/navigation";
+import { ensureReadableOnLight, contrastingTextColor } from "@/lib/colorContrast";
 import type { TemplateProps } from "./types";
 
 export function MinimalTemplate({ trainer, ctaUrl }: TemplateProps) {
-  const accent = trainer.accent_color ?? "#0f172a";
+  const rawAccent = trainer.accent_color ?? "#0f172a";
+  const accent = ensureReadableOnLight(rawAccent);
+  const ctaTextColor = contrastingTextColor(accent);
   const headline = trainer.headline ?? trainer.full_name;
   const sub = trainer.subheadline ?? trainer.bio;
   const cta = trainer.cta_text ?? "Agendar conversa";
@@ -54,8 +57,8 @@ export function MinimalTemplate({ trainer, ctaUrl }: TemplateProps) {
           <div className="mt-6 flex gap-3">
             <Link
               href={ctaUrl}
-              className="inline-flex items-center rounded-md px-5 py-3 font-semibold text-white transition hover:opacity-90"
-              style={{ background: accent }}
+              className="inline-flex items-center rounded-md px-5 py-3 font-semibold transition hover:opacity-90"
+              style={{ background: accent, color: ctaTextColor }}
             >
               {cta} →
             </Link>
@@ -196,8 +199,8 @@ export function MinimalTemplate({ trainer, ctaUrl }: TemplateProps) {
           </p>
           <Link
             href={ctaUrl}
-            className="mt-6 inline-flex items-center rounded-md px-6 py-3 font-semibold text-white transition hover:opacity-90"
-            style={{ background: accent }}
+            className="mt-6 inline-flex items-center rounded-md px-6 py-3 font-semibold transition hover:opacity-90"
+            style={{ background: accent, color: ctaTextColor }}
           >
             {cta} →
           </Link>

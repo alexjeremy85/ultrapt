@@ -3,6 +3,10 @@
 import { getLocale } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024; // 5MB
+const ALLOWED_PHOTO_MIME = ["image/jpeg", "image/png", "image/webp"];
 
 export async function submitAnamnesis(formData: FormData) {
   const locale = await getLocale();
@@ -13,10 +17,12 @@ export async function submitAnamnesis(formData: FormData) {
     redirect({ href: "/", locale });
   }
 
-  // Coleta tudo no formulario como dados de anamnese
+  // Coleta tudo no formulario (exceto trainer_id, slug e photo) como anamnesis_data
   const data: Record<string, unknown> = {};
+  const skipKeys = new Set(["trainer_id", "slug", "photo"]);
   formData.forEach((value, key) => {
-    if (["trainer_id", "slug"].includes(key)) return;
+    if (skipKeys.has(key)) return;
+    if (typeof value !== "string") return;
     if (data[key] !== undefined) {
       const existing = data[key];
       data[key] = Array.isArray(existing)
@@ -35,10 +41,38 @@ export async function submitAnamnesis(formData: FormData) {
   const birthDate = String(data.birth_date ?? "").trim() || null;
 
   if (!fullName) {
-    redirect({
-      href: `/pt/${slug}/anamnese?error=name`,
-      locale,
-    });
+    redirect({ href: `/pt/${slug}/anamnese?error=name`, locale });
+  }
+
+  // Upload da foto (opcional)
+  let photoUrl: string | null = null;
+  const photo = formData.get("photo");
+  if (photo instanceof File && photo.size > 0) {
+    if (photo.size > MAX_PHOTO_BYTES) {
+      redirect({ href: `/pt/${slug}/anamnese?error=photo_size`, locale });
+    }
+    if (!ALLOWED_PHOTO_MIME.includes(photo.type)) {
+      redirect({ href: `/pt/${slug}/anamnese?error=photo_type`, locale });
+    }
+    const ext = photo.type === "image/png"
+      ? "png"
+      : photo.type === "image/webp"
+      ? "webp"
+      : "jpg";
+    const objectPath = `${trainerId}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+    const admin = createAdminClient();
+    const { error: upErr } = await admin.storage
+      .from("student-photos")
+      .upload(objectPath, photo, {
+        contentType: photo.type,
+        upsert: false,
+      });
+    if (!upErr) {
+      const { data: pub } = admin.storage
+        .from("student-photos")
+        .getPublicUrl(objectPath);
+      photoUrl = pub.publicUrl ?? null;
+    }
   }
 
   const supabase = await createClient();
@@ -56,6 +90,7 @@ export async function submitAnamnesis(formData: FormData) {
         ? experience
         : null,
     status: "pending",
+    photo_url: photoUrl,
     anamnesis_data: data,
     anamnesis_submitted_at: new Date().toISOString(),
   });
@@ -67,8 +102,5 @@ export async function submitAnamnesis(formData: FormData) {
     });
   }
 
-  redirect({
-    href: `/pt/${slug}/anamnese?success=1`,
-    locale,
-  });
+  redirect({ href: `/pt/${slug}/anamnese?success=1`, locale });
 }

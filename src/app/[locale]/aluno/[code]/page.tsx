@@ -17,7 +17,7 @@ export default async function StudentHomePage({
   const { data: student } = await supabase
     .from("students")
     .select(
-      "id, full_name, trainer:trainers(full_name, photo_url, slug, whatsapp_phone)"
+      "id, full_name, photo_url, trainer:trainers(full_name, photo_url, slug, whatsapp_phone)"
     )
     .eq("access_code", code)
     .maybeSingle();
@@ -80,7 +80,21 @@ export default async function StudentHomePage({
       </header>
 
       <div className="mx-auto max-w-2xl px-5 py-6">
-        <div>
+        <div className="flex items-center gap-3">
+          <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full bg-bg-elevated">
+            {student.photo_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={student.photo_url}
+                alt={student.full_name}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-lg font-bold text-accent">
+                {student.full_name.charAt(0).toUpperCase()}
+              </div>
+            )}
+          </div>
           <h1 className="text-2xl font-bold">
             {t("StudentApp.welcome", { name: student.full_name.split(" ")[0] })}
           </h1>
