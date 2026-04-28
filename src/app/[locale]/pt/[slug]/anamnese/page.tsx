@@ -8,10 +8,10 @@ export default async function AnamnesisPage({
   searchParams,
 }: {
   params: Promise<{ locale: string; slug: string }>;
-  searchParams: Promise<{ success?: string }>;
+  searchParams: Promise<{ success?: string; error?: string }>;
 }) {
   const { locale, slug } = await params;
-  const { success } = await searchParams;
+  const { success, error } = await searchParams;
   setRequestLocale(locale);
   const t = await getTranslations();
 
@@ -70,6 +70,17 @@ export default async function AnamnesisPage({
               </p>
             </div>
           </div>
+          {error && (
+            <div className="mb-4 rounded-lg border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-danger">
+              {error === "photo_size"
+                ? "A foto enviada e maior que 5MB. Reduza o tamanho e tente de novo."
+                : error === "photo_type"
+                ? "Formato invalido. Envie JPG, PNG ou WebP."
+                : error === "name"
+                ? "Preencha o nome completo."
+                : "Nao foi possivel salvar. Tente novamente."}
+            </div>
+          )}
           <AnamnesisForm trainerId={trainer.id} slug={trainer.slug} />
         </div>
       </div>

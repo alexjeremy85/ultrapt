@@ -19,7 +19,7 @@ export default async function StudentsPage({
   const { data: students } = await supabase
     .from("students")
     .select(
-      "id, full_name, email, phone, status, objective, experience_level, workout_assignments(workout:workouts(id, name))"
+      "id, full_name, email, phone, status, objective, experience_level, photo_url, workout_assignments(workout:workouts(id, name))"
     )
     .eq("trainer_id", user!.id)
     .neq("status", "pending")
@@ -84,7 +84,25 @@ export default async function StudentsPage({
                   .filter(Boolean);
                 return (
                   <tr key={s.id} className="hover:bg-bg-surface">
-                    <td className="px-4 py-3 font-medium">{s.full_name}</td>
+                    <td className="px-4 py-3 font-medium">
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full bg-bg-elevated">
+                          {s.photo_url ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={s.photo_url}
+                              alt={s.full_name}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-xs font-bold text-accent">
+                              {s.full_name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                        <span>{s.full_name}</span>
+                      </div>
+                    </td>
                     <td className="px-4 py-3">
                       <StatusBadge status={s.status} />
                     </td>

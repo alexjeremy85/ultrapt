@@ -20,7 +20,7 @@ export default async function LeadsPage({
   const { data: leads } = await supabase
     .from("students")
     .select(
-      "id, full_name, email, phone, objective, experience_level, anamnesis_submitted_at"
+      "id, full_name, email, phone, objective, experience_level, photo_url, anamnesis_submitted_at"
     )
     .eq("trainer_id", user!.id)
     .eq("status", "pending")
@@ -47,8 +47,22 @@ export default async function LeadsPage({
             {leads.map((lead) => (
               <li
                 key={lead.id}
-                className="flex items-center justify-between p-4 hover:bg-bg-surface"
+                className="flex items-center justify-between gap-3 p-4 hover:bg-bg-surface"
               >
+                <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full bg-bg-elevated">
+                  {lead.photo_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={lead.photo_url}
+                      alt={lead.full_name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-sm font-bold text-accent">
+                      {lead.full_name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
                 <div className="min-w-0 flex-1">
                   <div className="font-medium">{lead.full_name}</div>
                   <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-ink-dim">
