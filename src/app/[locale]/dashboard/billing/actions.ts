@@ -12,6 +12,7 @@ import {
   asaasCreateSubscription,
   asaasCancelSubscription,
 } from "@/lib/asaas";
+import { validateVoucher, incrementVoucherUse } from "@/lib/vouchers";
 
 function nextDueDate(): string {
   const d = new Date();
@@ -33,13 +34,31 @@ function isValidCpf(cpf: string): boolean {
   return true;
 }
 
+export type VoucherCheckResult =
+  | { ok: true; finalPrice: number; discount: number; description: string | null }
+  | { ok: false; reason: string };
+
+export async function checkVoucher(
+  code: string,
+  planId: PlanId
+): Promise<VoucherCheckResult> {
+  if (!PLANS[planId]) return { ok: false, reason: "Plano invalido" };
+  const result = await validateVoucher(code, PLANS[planId].price);
+  if (!result.ok) return { ok: false, reason: result.reason };
+  return {
+    ok: true,
+    finalPrice: result.finalPrice,
+    discount: result.discount,
+    description: result.voucher.description,
+  };
+}
+
 export async function startSubscription(formData: FormData) {
   const locale = await getLocale();
   const planId = String(formData.get("plan_id") ?? "") as PlanId;
   const cpfInput = String(formData.get("cpf") ?? "").replace(/\D/g, "");
+  const voucherCode = String(formData.get("voucher_code") ?? "").trim();
 
-  // Resultado: definimos o destino e redirecionamos UMA UNICA VEZ
-  // FORA do try/catch, para nao engolir o NEXT_REDIRECT.
   let resultPath: string = `/dashboard/billing?error=${encodeURIComponent("Erro inesperado")}`;
 
   try {
@@ -60,7 +79,7 @@ export async function startSubscription(formData: FormData) {
     const { data: trainer } = await supabase
       .from("trainers")
       .select(
-        "asaas_customer_id, asaas_subscription_id, full_name, phone, whatsapp_phone, cpf"
+        "asaas_customer_id, asaas_subscription_id, full_name, phone, whatsapp_phone, cpf, voucher_used"
       )
       .eq("id", user.id)
       .single();
@@ -73,6 +92,27 @@ export async function startSubscription(formData: FormData) {
     if (!isValidCpf(cpf)) {
       resultPath = `/dashboard/billing?error=${encodeURIComponent("CPF invalido.")}`;
       throw new Error("done");
+    }
+
+    // Validacao de voucher (opcional)
+    const basePrice = PLANS[planId].price;
+    let finalPrice = basePrice;
+    let voucherIdToIncrement: string | null = null;
+    let voucherCodeUsed: string | null = null;
+
+    if (voucherCode) {
+      if (trainer?.voucher_used) {
+        resultPath = `/dashboard/billing?error=${encodeURIComponent("Voce ja usou um cupom anteriormente.")}`;
+        throw new Error("done");
+      }
+      const v = await validateVoucher(voucherCode, basePrice);
+      if (!v.ok) {
+        resultPath = `/dashboard/billing?error=${encodeURIComponent("Cupom: " + v.reason)}`;
+        throw new Error("done");
+      }
+      finalPrice = v.finalPrice;
+      voucherIdToIncrement = v.voucher.id;
+      voucherCodeUsed = v.voucher.code;
     }
 
     let customerId = trainer?.asaas_customer_id ?? null;
@@ -104,10 +144,12 @@ export async function startSubscription(formData: FormData) {
     const sub = await asaasCreateSubscription({
       customer: customerId!,
       billingType: "PIX",
-      value: PLANS[planId].price,
+      value: finalPrice,
       nextDueDate: nextDueDate(),
       cycle: "MONTHLY",
-      description: `Ultra PT - Plano ${PLANS[planId].name}`,
+      description: voucherCodeUsed
+        ? `Ultra PT - Plano ${PLANS[planId].name} (cupom ${voucherCodeUsed})`
+        : `Ultra PT - Plano ${PLANS[planId].name}`,
       externalReference: user.id,
     });
 
@@ -119,13 +161,24 @@ export async function startSubscription(formData: FormData) {
         subscription_plan: planId,
         subscription_status: "trialing",
         cpf,
+        ...(voucherCodeUsed
+          ? {
+              voucher_used: voucherCodeUsed,
+              voucher_used_at: new Date().toISOString(),
+            }
+          : {}),
       })
       .eq("id", user.id);
 
+    if (voucherIdToIncrement) {
+      await incrementVoucherUse(voucherIdToIncrement);
+    }
+
     revalidatePath("/[locale]/dashboard", "layout");
-    resultPath = `/dashboard/billing?success=${encodeURIComponent(
-      "Assinatura criada. A primeira cobranca chega via Pix em ate 14 dias."
-    )}`;
+    const successMsg = voucherCodeUsed
+      ? `Assinatura criada com cupom ${voucherCodeUsed}! Primeira cobranca de R$ ${finalPrice.toFixed(2).replace(".", ",")} via Pix em ate 14 dias.`
+      : `Assinatura criada. A primeira cobranca chega via Pix em ate 14 dias.`;
+    resultPath = `/dashboard/billing?success=${encodeURIComponent(successMsg)}`;
   } catch (err) {
     if (isRedirectError(err)) throw err;
     if (err instanceof Error && err.message !== "done") {

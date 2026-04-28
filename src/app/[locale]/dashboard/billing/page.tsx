@@ -23,7 +23,7 @@ export default async function BillingPage({
   const { data: trainer } = await supabase
     .from("trainers")
     .select(
-      "subscription_status, subscription_plan, trial_ends_at, asaas_customer_id, asaas_subscription_id, full_name, cpf"
+      "subscription_status, subscription_plan, trial_ends_at, asaas_customer_id, asaas_subscription_id, full_name, cpf, voucher_used"
     )
     .eq("id", user!.id)
     .single();
@@ -63,6 +63,7 @@ export default async function BillingPage({
         currentPlan={currentPlan}
         daysLeft={daysLeft}
         savedCpf={trainer?.cpf ?? null}
+        voucherUsed={trainer?.voucher_used ?? null}
       />
     </div>
   );
