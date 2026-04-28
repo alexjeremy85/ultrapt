@@ -14,7 +14,8 @@ import {
   asaasCancelSubscription,
   asaasListSubscriptionPayments,
 } from "@/lib/asaas";
-import { validateVoucher, incrementVoucherUse } from "@/lib/vouchers";
+import { validateVoucher } from "@/lib/vouchers";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 function todayDate(): string {
   // Asaas aceita data atual como primeira cobranca, gerando link/QR Code na hora
@@ -95,10 +96,10 @@ export async function startSubscription(formData: FormData) {
       throw new Error("done");
     }
 
-    // Validacao de voucher (opcional)
+    // Pre-validacao de voucher (apenas pra computar finalPrice).
+    // O CLAIM atomico acontece via RPC depois que a Asaas confirmar.
     const basePrice = PLANS[planId].price;
     let finalPrice = basePrice;
-    let voucherIdToIncrement: string | null = null;
     let voucherCodeUsed: string | null = null;
 
     if (voucherCode) {
@@ -112,7 +113,6 @@ export async function startSubscription(formData: FormData) {
         throw new Error("done");
       }
       finalPrice = v.finalPrice;
-      voucherIdToIncrement = v.voucher.id;
       voucherCodeUsed = v.voucher.code;
     }
 
@@ -162,17 +162,24 @@ export async function startSubscription(formData: FormData) {
         subscription_plan: planId,
         subscription_status: "pending_payment",
         cpf,
-        ...(voucherCodeUsed
-          ? {
-              voucher_used: voucherCodeUsed,
-              voucher_used_at: new Date().toISOString(),
-            }
-          : {}),
       })
       .eq("id", user.id);
 
-    if (voucherIdToIncrement) {
-      await incrementVoucherUse(voucherIdToIncrement);
+    // Claim atomico do voucher (RPC com row locks). Se falhar agora,
+    // o trainer ja tem a Asaas subscription criada e o voucher_used
+    // segue null — pode tentar de novo. O Asaas sub pode ser cancelada
+    // depois manualmente em caso de inconsistencia rara.
+    if (voucherCodeUsed) {
+      const admin = createAdminClient();
+      const { data: claim } = await admin.rpc("claim_voucher", {
+        p_trainer_id: user.id,
+        p_code: voucherCodeUsed,
+      });
+      const claimRow = Array.isArray(claim) ? claim[0] : claim;
+      if (!claimRow?.ok) {
+        // Cupom ja foi reivindicado por outra request — segue sem desconto
+        console.warn("[billing] claim_voucher falhou:", claimRow?.reason);
+      }
     }
 
     // Busca a primeira cobranca da subscription pra obter o invoiceUrl

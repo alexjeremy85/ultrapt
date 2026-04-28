@@ -106,7 +106,7 @@ export default async function BlockExecutionPage({
       )}
 
       <BlockExecution
-        studentId={student.id}
+        accessCode={code}
         blockId={block.id}
         exercises={exercises as ExType[]}
         backCode={code}

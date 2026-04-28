@@ -161,6 +161,10 @@ export function BillingClient({
                 }}
                 placeholder="Insira o código"
                 className="input uppercase"
+                autoComplete="off"
+                spellCheck={false}
+                autoCorrect="off"
+                autoCapitalize="characters"
               />
             </div>
             <button

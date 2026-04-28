@@ -45,6 +45,7 @@ export async function updateSession(request: NextRequest) {
   const path = stripLocalePrefix(request.nextUrl.pathname);
   const isAuthPage = path.startsWith("/login") || path.startsWith("/signup");
   const isAppRoute = path.startsWith("/dashboard");
+  const isBillingRoute = path.startsWith("/dashboard/billing");
 
   if (!user && isAppRoute) {
     const url = request.nextUrl.clone();
@@ -56,6 +57,26 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);
+  }
+
+  // Subscription gate: bloqueia acesso ao app se o status nao for valido.
+  // /dashboard/billing fica acessivel pra o trainer regularizar.
+  if (user && isAppRoute && !isBillingRoute) {
+    const { data: trainer } = await supabase
+      .from("trainers")
+      .select("subscription_status")
+      .eq("id", user.id)
+      .maybeSingle();
+    const status = trainer?.subscription_status ?? "trialing";
+    const allowed = status === "trialing" || status === "active";
+    if (!allowed) {
+      const url = request.nextUrl.clone();
+      // Mantem o prefixo de locale ja presente no pathname
+      const localeMatch = request.nextUrl.pathname.match(/^\/([a-z]{2}(-[A-Z]{2})?)\//);
+      const localePrefix = localeMatch ? `/${localeMatch[1]}` : "";
+      url.pathname = `${localePrefix}/dashboard/billing`;
+      return NextResponse.redirect(url);
+    }
   }
 
   return supabaseResponse;

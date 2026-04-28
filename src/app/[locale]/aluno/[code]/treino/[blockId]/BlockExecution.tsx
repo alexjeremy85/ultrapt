@@ -25,12 +25,12 @@ type Exercise = {
 };
 
 export function BlockExecution({
-  studentId,
+  accessCode,
   blockId,
   exercises,
   backCode,
 }: {
-  studentId: string;
+  accessCode: string;
   blockId: string;
   exercises: Exercise[];
   backCode: string;
@@ -68,7 +68,7 @@ export function BlockExecution({
     setRestEnd(Date.now() + restSeconds * 1000);
     startTransition(async () => {
       await logSet({
-        studentId,
+        accessCode,
         workoutExerciseId: exId,
         setNumber,
       });
@@ -78,7 +78,7 @@ export function BlockExecution({
   const onFinish = async () => {
     setSubmitting(true);
     await finishBlockExecution({
-      studentId,
+      accessCode,
       blockId,
       perceivedEffort: perceived,
     });
