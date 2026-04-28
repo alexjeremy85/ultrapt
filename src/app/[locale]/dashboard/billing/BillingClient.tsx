@@ -110,7 +110,7 @@ export function BillingClient({
           Dados de pagamento
         </h3>
         <p className="mt-1 text-sm text-ink-muted">
-          O CPF é exigido para emissão da cobrança Pix.
+          O CPF é exigido para emissão da cobrança (Pix ou cartão).
         </p>
         <div className="mt-3 max-w-xs">
           <label className="label">CPF do titular</label>
@@ -159,7 +159,7 @@ export function BillingClient({
                   setVoucher(e.target.value.toUpperCase());
                   setVoucherResult(null);
                 }}
-                placeholder="EX: BEMVINDO2804"
+                placeholder="Insira o código"
                 className="input uppercase"
               />
             </div>
@@ -313,6 +313,10 @@ function StatusBadge({ status }: { status: string }) {
     trialing: {
       label: "Em trial",
       className: "bg-accent/15 text-accent",
+    },
+    pending_payment: {
+      label: "Aguardando pagamento",
+      className: "bg-warning/15 text-warning",
     },
     active: {
       label: "Ativo",

@@ -2,7 +2,7 @@ import { Link } from "@/i18n/navigation";
 import { ensureReadableOnLight, contrastingTextColor } from "@/lib/colorContrast";
 import type { TemplateProps } from "./types";
 
-export function MinimalTemplate({ trainer, ctaUrl }: TemplateProps) {
+export function MinimalTemplate({ trainer, ctaUrl, studentLoginSlot }: TemplateProps) {
   const rawAccent = trainer.accent_color ?? "#0f172a";
   const accent = ensureReadableOnLight(rawAccent);
   const ctaTextColor = contrastingTextColor(accent);
@@ -12,6 +12,11 @@ export function MinimalTemplate({ trainer, ctaUrl }: TemplateProps) {
 
   return (
     <main className="min-h-screen bg-white text-slate-900">
+      {studentLoginSlot && (
+        <div className="absolute right-4 top-4 z-20 text-slate-700">
+          {studentLoginSlot}
+        </div>
+      )}
       <div className="mx-auto max-w-3xl px-6 py-12">
         {/* Header */}
         <header className="flex items-center gap-4 border-b border-slate-200 pb-8">

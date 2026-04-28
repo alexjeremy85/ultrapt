@@ -41,7 +41,7 @@ Depois disso, **redeploy** para aplicar as variáveis.
 1. No painel Asaas (produção), vá em **Configurações → Integrações → Webhooks**
 2. **Novo Webhook**:
    - **Nome:** Pagamento Ultra PT
-   - **URL:** `https://ultrapt-encontemas-projects.vercel.app/api/webhooks/asaas`
+   - **URL:** `https://project-pwzai.vercel.app/api/webhooks/asaas`
      - (ou seu domínio próprio se já tiver)
    - **Versão da API:** v3
    - **Token de autenticação:** `e3cd5508b25e31e95e6f53fba904bde6159e7600eeba6e2ede015c0aa89ca39c`
@@ -61,7 +61,7 @@ Depois disso, **redeploy** para aplicar as variáveis.
 
 ## 4. Garantir que produção tem a versão atualizada
 
-A URL de produção (`ultrapt-encontemas-projects.vercel.app`) deploya da branch `main`. Se você desenvolveu em `dev`, faça merge:
+A URL de produção (`project-pwzai.vercel.app`) deploya da branch `main`. Se você desenvolveu em `dev`, faça merge:
 
 ```bash
 git checkout main
@@ -95,7 +95,7 @@ Como verificar: SQL Editor → `select count(*) from public.exercises;` deve ret
 
 ## 6. Domínio próprio (recomendado)
 
-URL atual `ultrapt-encontemas-projects.vercel.app` é longa e quebra confiança.
+URL atual `project-pwzai.vercel.app` é longa e quebra confiança.
 
 1. Compre `ultrapt.com.br` ou similar (registro.br ~R$40/ano)
 2. Vercel: **Project → Settings → Domains → Add**

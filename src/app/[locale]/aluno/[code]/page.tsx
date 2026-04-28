@@ -62,18 +62,26 @@ export default async function StudentHomePage({
                 </div>
               )}
             </div>
-            <div>
+            <div className="min-w-0 flex-1">
               <div className="font-semibold">{trainer.full_name}</div>
-              {trainer.whatsapp_phone && (
-                <a
-                  href={`https://wa.me/55${trainer.whatsapp_phone}`}
-                  target="_blank"
-                  rel="noopener"
-                  className="text-xs text-accent"
+              <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs">
+                <Link
+                  href={`/aluno/${code}/chat`}
+                  className="font-semibold text-accent hover:underline"
                 >
-                  Falar no WhatsApp
-                </a>
-              )}
+                  💬 Conversar
+                </Link>
+                {trainer.whatsapp_phone && (
+                  <a
+                    href={`https://wa.me/55${trainer.whatsapp_phone}`}
+                    target="_blank"
+                    rel="noopener"
+                    className="text-ink-muted hover:text-accent"
+                  >
+                    WhatsApp
+                  </a>
+                )}
+              </div>
             </div>
           </div>
         </div>

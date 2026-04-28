@@ -2,7 +2,7 @@ import { Link } from "@/i18n/navigation";
 import { ensureReadableOnDark, contrastingTextColor } from "@/lib/colorContrast";
 import type { TemplateProps } from "./types";
 
-export function EnergyTemplate({ trainer, ctaUrl }: TemplateProps) {
+export function EnergyTemplate({ trainer, ctaUrl, studentLoginSlot }: TemplateProps) {
   const rawAccent = trainer.accent_color ?? "#10b981";
   const accent = ensureReadableOnDark(rawAccent);
   const ctaTextColor = contrastingTextColor(accent);
@@ -12,6 +12,9 @@ export function EnergyTemplate({ trainer, ctaUrl }: TemplateProps) {
 
   return (
     <main className="min-h-screen bg-black text-white">
+      {studentLoginSlot && (
+        <div className="absolute right-4 top-4 z-20">{studentLoginSlot}</div>
+      )}
       {/* Hero full-bleed */}
       <section className="relative overflow-hidden">
         <div

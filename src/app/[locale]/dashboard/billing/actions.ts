@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
+import { redirect as nextRedirect } from "next/navigation";
 import { getLocale } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -11,13 +12,13 @@ import {
   asaasFindCustomerByCpf,
   asaasCreateSubscription,
   asaasCancelSubscription,
+  asaasListSubscriptionPayments,
 } from "@/lib/asaas";
 import { validateVoucher, incrementVoucherUse } from "@/lib/vouchers";
 
-function nextDueDate(): string {
-  const d = new Date();
-  d.setDate(d.getDate() + 14);
-  return d.toISOString().slice(0, 10);
+function todayDate(): string {
+  // Asaas aceita data atual como primeira cobranca, gerando link/QR Code na hora
+  return new Date().toISOString().slice(0, 10);
 }
 
 function isValidCpf(cpf: string): boolean {
@@ -143,9 +144,9 @@ export async function startSubscription(formData: FormData) {
 
     const sub = await asaasCreateSubscription({
       customer: customerId!,
-      billingType: "PIX",
+      billingType: "UNDEFINED", // permite Pix OU Cartao no checkout do Asaas
       value: finalPrice,
-      nextDueDate: nextDueDate(),
+      nextDueDate: todayDate(), // cobranca disponivel HOJE
       cycle: "MONTHLY",
       description: voucherCodeUsed
         ? `Ultra PT - Plano ${PLANS[planId].name} (cupom ${voucherCodeUsed})`
@@ -159,7 +160,7 @@ export async function startSubscription(formData: FormData) {
         asaas_customer_id: customerId,
         asaas_subscription_id: sub.id,
         subscription_plan: planId,
-        subscription_status: "trialing",
+        subscription_status: "pending_payment",
         cpf,
         ...(voucherCodeUsed
           ? {
@@ -174,11 +175,30 @@ export async function startSubscription(formData: FormData) {
       await incrementVoucherUse(voucherIdToIncrement);
     }
 
+    // Busca a primeira cobranca da subscription pra obter o invoiceUrl
+    // (pagina do Asaas onde o cliente escolhe Pix ou Cartao)
+    let invoiceUrl: string | null = null;
+    for (let i = 0; i < 5 && !invoiceUrl; i++) {
+      const payments = await asaasListSubscriptionPayments(sub.id);
+      const first = payments.data?.[0];
+      if (first?.invoiceUrl) {
+        invoiceUrl = first.invoiceUrl;
+        break;
+      }
+      // Asaas as vezes leva 1-2s pra criar o payment apos a subscription
+      await new Promise((r) => setTimeout(r, 800));
+    }
+
     revalidatePath("/[locale]/dashboard", "layout");
-    const successMsg = voucherCodeUsed
-      ? `Assinatura criada com cupom ${voucherCodeUsed}! Primeira cobranca de R$ ${finalPrice.toFixed(2).replace(".", ",")} via Pix em ate 14 dias.`
-      : `Assinatura criada. A primeira cobranca chega via Pix em ate 14 dias.`;
-    resultPath = `/dashboard/billing?success=${encodeURIComponent(successMsg)}`;
+    if (invoiceUrl) {
+      // Redireciona direto pro checkout hospedado do Asaas
+      resultPath = invoiceUrl;
+    } else {
+      const successMsg = voucherCodeUsed
+        ? `Assinatura criada com cupom ${voucherCodeUsed}! Pague hoje para ativar.`
+        : `Assinatura criada. Pague hoje para ativar.`;
+      resultPath = `/dashboard/billing?success=${encodeURIComponent(successMsg)}`;
+    }
   } catch (err) {
     if (isRedirectError(err)) throw err;
     if (err instanceof Error && err.message !== "done") {
@@ -186,5 +206,9 @@ export async function startSubscription(formData: FormData) {
     }
   }
 
+  // URLs externas (invoiceUrl do Asaas) precisam do redirect do next/navigation
+  if (/^https?:\/\//.test(resultPath)) {
+    nextRedirect(resultPath);
+  }
   redirect({ href: resultPath, locale });
 }
