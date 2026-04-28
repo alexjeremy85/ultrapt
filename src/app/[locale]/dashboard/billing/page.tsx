@@ -2,6 +2,7 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { type PlanId } from "@/lib/plans";
 import { BillingClient } from "./BillingClient";
+import { getSubscriptionDetails } from "./actions";
 
 export default async function BillingPage({
   params,
@@ -23,7 +24,7 @@ export default async function BillingPage({
   const { data: trainer } = await supabase
     .from("trainers")
     .select(
-      "subscription_status, subscription_plan, trial_ends_at, asaas_customer_id, asaas_subscription_id, asaas_invoice_url, full_name, cpf, voucher_used"
+      "subscription_status, subscription_plan, trial_ends_at, asaas_customer_id, asaas_subscription_id, full_name, cpf, voucher_used"
     )
     .eq("id", user!.id)
     .single();
@@ -39,6 +40,11 @@ export default async function BillingPage({
         Math.ceil((trialEnds.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
       )
     : 0;
+
+  const subscriptionDetails =
+    status === "active" || status === "past_due"
+      ? await getSubscriptionDetails()
+      : null;
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
@@ -64,7 +70,7 @@ export default async function BillingPage({
         daysLeft={daysLeft}
         savedCpf={trainer?.cpf ?? null}
         voucherUsed={trainer?.voucher_used ?? null}
-        invoiceUrl={trainer?.asaas_invoice_url ?? null}
+        subscriptionDetails={subscriptionDetails}
       />
     </div>
   );
