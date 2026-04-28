@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { PLANS, type PlanId } from "@/lib/plans";
-import { startSubscription, checkVoucher, type VoucherCheckResult } from "./actions";
+import { startSubscription, checkVoucher, refreshInvoiceUrl, type VoucherCheckResult } from "./actions";
 
 function maskCpf(value: string): string {
   const digits = value.replace(/\D/g, "").slice(0, 11);
@@ -27,12 +27,14 @@ export function BillingClient({
   daysLeft,
   savedCpf,
   voucherUsed,
+  invoiceUrl,
 }: {
   status: string;
   currentPlan: PlanId;
   daysLeft: number;
   savedCpf: string | null;
   voucherUsed: string | null;
+  invoiceUrl: string | null;
 }) {
   const t = useTranslations();
   const [cpf, setCpf] = useState(savedCpf ? maskCpf(savedCpf) : "");
@@ -101,6 +103,9 @@ export function BillingClient({
             {t("Billing.trial_days_left", { days: daysLeft })} —{" "}
             {t("Billing.trial_subtitle")}
           </p>
+        )}
+        {status === "pending_payment" && (
+          <PendingPaymentCta initialUrl={invoiceUrl} />
         )}
       </div>
 
@@ -348,3 +353,53 @@ function StatusBadge({ status }: { status: string }) {
     </span>
   );
 }
+
+function PendingPaymentCta({ initialUrl }: { initialUrl: string | null }) {
+  const [url, setUrl] = useState<string | null>(initialUrl);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleRefresh = async () => {
+    setLoading(true);
+    setError(null);
+    const res = await refreshInvoiceUrl();
+    setLoading(false);
+    if (res.ok) {
+      setUrl(res.url);
+      window.open(res.url, "_blank", "noopener,noreferrer");
+    } else {
+      setError(res.reason);
+    }
+  };
+
+  return (
+    <div className="mt-4 rounded-xl border border-warning/40 bg-warning/10 p-4">
+      <div className="text-sm font-bold text-warning">
+        ⏰ Sua assinatura está aguardando pagamento
+      </div>
+      <p className="mt-1 text-xs text-ink-muted">
+        Pague hoje (Pix ou cartão) e o acesso ativa em segundos.
+      </p>
+      {url ? (
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-primary mt-3 inline-flex"
+        >
+          💳 Pagar agora
+        </a>
+      ) : (
+        <button
+          onClick={handleRefresh}
+          disabled={loading}
+          className="btn-primary mt-3 inline-flex disabled:opacity-50"
+        >
+          {loading ? "Buscando link..." : "💳 Buscar link de pagamento"}
+        </button>
+      )}
+      {error && <p className="mt-2 text-xs text-danger">{error}</p>}
+    </div>
+  );
+}
+
