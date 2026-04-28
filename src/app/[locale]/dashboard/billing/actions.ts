@@ -40,6 +40,54 @@ export type VoucherCheckResult =
   | { ok: true; finalPrice: number; discount: number; description: string | null }
   | { ok: false; reason: string };
 
+/**
+ * Re-busca o invoiceUrl da subscription do trainer atual.
+ * Usado como fallback caso o redirect direto pro Asaas falhe ou
+ * caso a primeira cobranca demore pra ser gerada.
+ */
+export async function refreshInvoiceUrl(): Promise<
+  { ok: true; url: string } | { ok: false; reason: string }
+> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, reason: "Nao autenticado" };
+
+  const { data: trainer } = await supabase
+    .from("trainers")
+    .select("asaas_subscription_id, asaas_invoice_url")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (!trainer?.asaas_subscription_id) {
+    return { ok: false, reason: "Sem assinatura ativa" };
+  }
+
+  // Se ja temos um URL persistido, retorna direto
+  if (trainer.asaas_invoice_url) {
+    return { ok: true, url: trainer.asaas_invoice_url };
+  }
+
+  // Senao, busca no Asaas
+  try {
+    const payments = await asaasListSubscriptionPayments(
+      trainer.asaas_subscription_id
+    );
+    const first = payments.data?.[0];
+    if (!first?.invoiceUrl) {
+      return { ok: false, reason: "Cobranca ainda nao foi gerada. Tente em 30s." };
+    }
+    await supabase
+      .from("trainers")
+      .update({ asaas_invoice_url: first.invoiceUrl })
+      .eq("id", user.id);
+    return { ok: true, url: first.invoiceUrl };
+  } catch (e) {
+    return { ok: false, reason: (e as Error).message };
+  }
+}
+
 export async function checkVoucher(
   code: string,
   planId: PlanId
@@ -183,17 +231,29 @@ export async function startSubscription(formData: FormData) {
     }
 
     // Busca a primeira cobranca da subscription pra obter o invoiceUrl
-    // (pagina do Asaas onde o cliente escolhe Pix ou Cartao)
+    // (pagina do Asaas onde o cliente escolhe Pix ou Cartao).
+    // Asaas pode levar alguns segundos pra gerar o payment.
     let invoiceUrl: string | null = null;
-    for (let i = 0; i < 5 && !invoiceUrl; i++) {
-      const payments = await asaasListSubscriptionPayments(sub.id);
-      const first = payments.data?.[0];
-      if (first?.invoiceUrl) {
-        invoiceUrl = first.invoiceUrl;
-        break;
+    for (let i = 0; i < 12 && !invoiceUrl; i++) {
+      try {
+        const payments = await asaasListSubscriptionPayments(sub.id);
+        const first = payments.data?.[0];
+        if (first?.invoiceUrl) {
+          invoiceUrl = first.invoiceUrl;
+          break;
+        }
+      } catch (e) {
+        console.warn("[billing] list payments retry", i, (e as Error).message);
       }
-      // Asaas as vezes leva 1-2s pra criar o payment apos a subscription
-      await new Promise((r) => setTimeout(r, 800));
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+
+    // Persiste o invoiceUrl pra fallback (botao "Pagar agora" na billing page)
+    if (invoiceUrl) {
+      await supabase
+        .from("trainers")
+        .update({ asaas_invoice_url: invoiceUrl })
+        .eq("id", user.id);
     }
 
     revalidatePath("/[locale]/dashboard", "layout");
@@ -201,9 +261,12 @@ export async function startSubscription(formData: FormData) {
       // Redireciona direto pro checkout hospedado do Asaas
       resultPath = invoiceUrl;
     } else {
+      // Asaas demorou demais pra gerar o payment. Usuario sera direcionado
+      // pra /dashboard/billing onde aparecera o botao "Pagar agora" assim
+      // que o invoiceUrl for persistido em outra request.
       const successMsg = voucherCodeUsed
-        ? `Assinatura criada com cupom ${voucherCodeUsed}! Pague hoje para ativar.`
-        : `Assinatura criada. Pague hoje para ativar.`;
+        ? `Assinatura criada com cupom ${voucherCodeUsed}. Aperte "Pagar agora" para finalizar.`
+        : `Assinatura criada. Aperte "Pagar agora" para finalizar.`;
       resultPath = `/dashboard/billing?success=${encodeURIComponent(successMsg)}`;
     }
   } catch (err) {
