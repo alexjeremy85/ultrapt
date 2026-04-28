@@ -6,7 +6,7 @@ Guia rápido do zero ao primeiro aluno treinando.
 
 ## Etapa 1 — Configurar perfil (5 min)
 
-1. Acesse https://ultrapt-git-dev-encontemas-projects.vercel.app
+1. Acesse https://project-pwzai.vercel.app
 2. Clique em **Criar conta grátis** → preencha nome, e-mail, senha
 3. No dashboard, vá em **Meu perfil**
 4. Preencha **TODOS os campos** (siga o checklist em [PAGINA-PUBLICA.md](PAGINA-PUBLICA.md#checklist-antes-de-divulgar))
