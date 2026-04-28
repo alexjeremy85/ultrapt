@@ -142,3 +142,17 @@ export async function asaasGetPaymentPixQr(
 ): Promise<{ encodedImage: string; payload: string; expirationDate: string }> {
   return asaasFetch(`/payments/${paymentId}/pixQrCode`);
 }
+
+/**
+ * Lista os pagamentos de uma assinatura.
+ * Apos criar a subscription, usamos isso pra pegar o invoiceUrl da
+ * primeira cobranca e mandar o usuario direto pro checkout hospedado
+ * (onde ele escolhe Pix ou Cartao).
+ */
+export async function asaasListSubscriptionPayments(
+  subscriptionId: string
+): Promise<{ data: AsaasPayment[] }> {
+  return asaasFetch<{ data: AsaasPayment[] }>(
+    `/subscriptions/${subscriptionId}/payments`
+  );
+}

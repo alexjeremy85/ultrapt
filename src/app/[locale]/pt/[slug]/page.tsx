@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { BoldTemplate } from "./templates/BoldTemplate";
 import { MinimalTemplate } from "./templates/MinimalTemplate";
 import { EnergyTemplate } from "./templates/EnergyTemplate";
+import { StudentLoginButton } from "./StudentLoginButton";
 import type { TrainerProfile } from "./templates/types";
 
 export const revalidate = 60;
@@ -70,13 +71,40 @@ export default async function PublicTrainerPage({
 
   const ctaUrl = `/pt/${slug}/anamnese`;
 
+  // Botao "Ja sou aluno" injetado em todos os templates
+  const studentLoginSlot = (
+    <StudentLoginButton
+      trainerSlug={slug}
+      label="Já sou aluno"
+      className="rounded-full border border-current/30 px-3 py-1 text-xs font-semibold uppercase tracking-wider opacity-80 transition hover:opacity-100"
+    />
+  );
+
   switch (trainer.template_id) {
     case "minimal":
-      return <MinimalTemplate trainer={trainer} ctaUrl={ctaUrl} />;
+      return (
+        <MinimalTemplate
+          trainer={trainer}
+          ctaUrl={ctaUrl}
+          studentLoginSlot={studentLoginSlot}
+        />
+      );
     case "energy":
-      return <EnergyTemplate trainer={trainer} ctaUrl={ctaUrl} />;
+      return (
+        <EnergyTemplate
+          trainer={trainer}
+          ctaUrl={ctaUrl}
+          studentLoginSlot={studentLoginSlot}
+        />
+      );
     case "bold":
     default:
-      return <BoldTemplate trainer={trainer} ctaUrl={ctaUrl} />;
+      return (
+        <BoldTemplate
+          trainer={trainer}
+          ctaUrl={ctaUrl}
+          studentLoginSlot={studentLoginSlot}
+        />
+      );
   }
 }

@@ -2,7 +2,7 @@ import { Link } from "@/i18n/navigation";
 import { ensureReadableOnDark, contrastingTextColor } from "@/lib/colorContrast";
 import type { TemplateProps } from "./types";
 
-export function BoldTemplate({ trainer, ctaUrl }: TemplateProps) {
+export function BoldTemplate({ trainer, ctaUrl, studentLoginSlot }: TemplateProps) {
   const rawAccent = trainer.accent_color ?? "#ff6b00";
   const accent = ensureReadableOnDark(rawAccent);
   const ctaTextColor = contrastingTextColor(accent);
@@ -15,6 +15,9 @@ export function BoldTemplate({ trainer, ctaUrl }: TemplateProps) {
       className="min-h-screen bg-bg text-ink"
       style={{ ["--brand" as const]: accent } as React.CSSProperties}
     >
+      {studentLoginSlot && (
+        <div className="absolute right-4 top-4 z-20">{studentLoginSlot}</div>
+      )}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div
           className="absolute -top-40 left-1/2 h-[500px] w-[700px] -translate-x-1/2 rounded-full blur-[140px]"

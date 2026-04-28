@@ -39,4 +39,5 @@ export type Highlight = {
 export type TemplateProps = {
   trainer: TrainerProfile;
   ctaUrl: string;
+  studentLoginSlot?: React.ReactNode;
 };
