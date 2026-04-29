@@ -2,7 +2,7 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { ChatIcon, ClockIcon } from "@/components/icons";
+import { ChatIcon, ClockIcon, ArrowRightIcon } from "@/components/icons";
 
 export default async function StudentHomePage({
   params,
@@ -180,7 +180,7 @@ export default async function StudentHomePage({
                               {exCount} exercícios
                             </div>
                           </div>
-                          <span className="text-accent">→</span>
+                          <ArrowRightIcon className="h-4 w-4 text-accent" />
                         </Link>
                       );
                     })}

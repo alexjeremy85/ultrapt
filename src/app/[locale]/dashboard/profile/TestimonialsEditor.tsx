@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { StarIcon } from "@/components/icons";
 
 type Testimonial = {
   name: string;
@@ -86,11 +87,14 @@ export function TestimonialsEditor({
                 key={n}
                 type="button"
                 onClick={() => update(idx, "rating", n)}
-                className={`text-lg ${
-                  (it.rating ?? 0) >= n ? "text-accent" : "text-ink-dim"
+                aria-label={`${n} estrelas`}
+                className={`inline-flex h-7 w-7 items-center justify-center transition ${
+                  (it.rating ?? 0) >= n
+                    ? "text-accent"
+                    : "text-ink-dim opacity-40 hover:opacity-100"
                 }`}
               >
-                ★
+                <StarIcon className="h-5 w-5" />
               </button>
             ))}
           </div>

@@ -2,6 +2,7 @@ import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { ArrowLeftIcon } from "@/components/icons";
 import { studentLoadMessages } from "@/lib/chat";
 import type { ChatMessage } from "@/lib/chat-types";
 import { StudentChatClient } from "./StudentChatClient";
@@ -39,9 +40,10 @@ export default async function StudentChatPage({
         <div className="mx-auto max-w-2xl">
           <Link
             href={`/aluno/${code}`}
-            className="text-sm text-ink-muted hover:text-accent"
+            className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-accent"
           >
-            ← Voltar
+            <ArrowLeftIcon className="h-4 w-4" />
+            Voltar
           </Link>
         </div>
       </header>

@@ -1,5 +1,6 @@
 import { Link } from "@/i18n/navigation";
 import { ensureReadableOnLight, contrastingTextColor } from "@/lib/colorContrast";
+import { ArrowRightIcon } from "@/components/icons";
 import { HighlightIcon } from "@/lib/highlight-icons";
 import type { TemplateProps } from "./types";
 
@@ -63,10 +64,11 @@ export function MinimalTemplate({ trainer, ctaUrl, studentLoginSlot }: TemplateP
           <div className="mt-6 flex gap-3">
             <Link
               href={ctaUrl}
-              className="inline-flex items-center rounded-md px-5 py-3 font-semibold transition hover:opacity-90"
+              className="inline-flex items-center gap-2 rounded-md px-5 py-3 font-semibold transition hover:opacity-90"
               style={{ background: accent, color: ctaTextColor }}
             >
-              {cta} →
+              {cta}
+              <ArrowRightIcon className="h-4 w-4" />
             </Link>
             {trainer.whatsapp_phone && (
               <a
@@ -207,10 +209,11 @@ export function MinimalTemplate({ trainer, ctaUrl, studentLoginSlot }: TemplateP
           </p>
           <Link
             href={ctaUrl}
-            className="mt-6 inline-flex items-center rounded-md px-6 py-3 font-semibold transition hover:opacity-90"
+            className="mt-6 inline-flex items-center gap-2 rounded-md px-6 py-3 font-semibold transition hover:opacity-90"
             style={{ background: accent, color: ctaTextColor }}
           >
-            {cta} →
+            {cta}
+            <ArrowRightIcon className="h-4 w-4" />
           </Link>
           {trainer.instagram_handle && (
             <div className="mt-4 text-sm">

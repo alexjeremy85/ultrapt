@@ -1,5 +1,6 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { ArrowLeftIcon } from "@/components/icons";
 import { createStudent } from "./actions";
 
 export default async function NewStudentPage({
@@ -19,9 +20,10 @@ export default async function NewStudentPage({
       <div>
         <Link
           href="/dashboard/students"
-          className="text-sm text-ink-muted hover:text-accent"
+          className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-accent"
         >
-          ← {t("Common.back")}
+          <ArrowLeftIcon className="h-4 w-4" />
+          {t("Common.back")}
         </Link>
         <h1 className="mt-2 text-2xl font-bold">{t("Students.new_title")}</h1>
         <p className="text-sm text-ink-muted">{t("Students.new_subtitle")}</p>

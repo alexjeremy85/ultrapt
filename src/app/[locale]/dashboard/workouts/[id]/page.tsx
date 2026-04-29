@@ -2,6 +2,7 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { ArrowLeftIcon } from "@/components/icons";
 import { WorkoutBuilder } from "./WorkoutBuilder";
 
 export default async function WorkoutEditPage({
@@ -45,9 +46,10 @@ export default async function WorkoutEditPage({
       <div>
         <Link
           href="/dashboard/workouts"
-          className="text-sm text-ink-muted hover:text-accent"
+          className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-accent"
         >
-          ← {t("Common.back")}
+          <ArrowLeftIcon className="h-4 w-4" />
+          {t("Common.back")}
         </Link>
         <div className="mt-2 flex items-start justify-between gap-4">
           <div>

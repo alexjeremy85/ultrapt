@@ -2,6 +2,7 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { ArrowLeftIcon } from "@/components/icons";
 import { BlockExecution } from "./BlockExecution";
 
 export default async function BlockExecutionPage({
@@ -84,9 +85,10 @@ export default async function BlockExecutionPage({
         <div className="mx-auto flex max-w-2xl items-center gap-3">
           <Link
             href={`/aluno/${code}`}
-            className="text-ink-muted hover:text-accent"
+            className="inline-flex items-center text-ink-muted hover:text-accent"
+            aria-label="Voltar"
           >
-            ←
+            <ArrowLeftIcon className="h-5 w-5" />
           </Link>
           <div className="flex-1">
             <div className="text-xs text-ink-dim">

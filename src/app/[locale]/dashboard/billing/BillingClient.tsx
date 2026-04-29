@@ -9,6 +9,7 @@ import {
   TicketIcon,
   CheckIcon,
   CloseIcon,
+  ArrowRightIcon,
 } from "@/components/icons";
 import {
   startSubscription,
@@ -401,9 +402,10 @@ export function BillingClient({
                 <button
                   type="button"
                   onClick={() => onValidateVoucher(planId)}
-                  className="mt-3 text-xs text-accent hover:underline"
+                  className="mt-3 inline-flex items-center gap-1 text-xs text-accent hover:underline"
                 >
-                  Aplicar cupom neste plano →
+                  Aplicar cupom neste plano
+                  <ArrowRightIcon className="h-3 w-3" />
                 </button>
               )}
 
@@ -735,9 +737,10 @@ function ActiveSubscriptionPanel({
                           href={p.invoiceUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs text-accent hover:underline"
+                          className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
                         >
-                          Ver →
+                          Ver
+                          <ArrowRightIcon className="h-3 w-3" />
                         </a>
                       )}
                     </td>

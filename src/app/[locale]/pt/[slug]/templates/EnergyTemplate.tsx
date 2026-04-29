@@ -1,6 +1,11 @@
 import { Link } from "@/i18n/navigation";
 import { ensureReadableOnDark, contrastingTextColor } from "@/lib/colorContrast";
-import { WhatsappIcon, InstagramIcon } from "@/components/icons";
+import {
+  WhatsappIcon,
+  InstagramIcon,
+  StarRating,
+  ArrowRightIcon,
+} from "@/components/icons";
 import { HighlightIcon } from "@/lib/highlight-icons";
 import type { TemplateProps } from "./types";
 
@@ -72,7 +77,8 @@ export function EnergyTemplate({ trainer, ctaUrl, studentLoginSlot }: TemplatePr
                   boxShadow: `0 0 50px 0 ${accent}66`,
                 }}
               >
-                {cta} →
+                {cta}
+                <ArrowRightIcon className="h-4 w-4" />
               </Link>
             </div>
 
@@ -204,14 +210,13 @@ export function EnergyTemplate({ trainer, ctaUrl, studentLoginSlot }: TemplatePr
                   className="rounded-2xl border border-white/10 bg-white/5 p-6"
                 >
                   {tt.rating && (
-                    <div
-                      className="mb-3 text-lg"
-                      style={{ color: accent }}
-                    >
-                      {"★".repeat(tt.rating)}
-                      <span className="text-white/20">
-                        {"★".repeat(5 - tt.rating)}
-                      </span>
+                    <div className="mb-3" style={{ color: accent }}>
+                      <StarRating
+                        value={tt.rating}
+                        size="h-5 w-5"
+                        filledClassName=""
+                        emptyClassName="text-white/20"
+                      />
                     </div>
                   )}
                   <p className="text-white leading-relaxed">"{tt.text}"</p>
@@ -259,7 +264,8 @@ export function EnergyTemplate({ trainer, ctaUrl, studentLoginSlot }: TemplatePr
                 boxShadow: `0 0 50px 0 ${accent}66`,
               }}
             >
-              {cta} →
+              {cta}
+              <ArrowRightIcon className="h-4 w-4" />
             </Link>
           </div>
 

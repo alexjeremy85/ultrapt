@@ -2,6 +2,7 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { ArrowLeftIcon } from "@/components/icons";
 import { approveLead, rejectLead } from "./actions";
 
 export default async function LeadDetailPage({
@@ -33,9 +34,10 @@ export default async function LeadDetailPage({
     <div className="mx-auto max-w-3xl space-y-6">
       <Link
         href="/dashboard/leads"
-        className="text-sm text-ink-muted hover:text-accent"
+        className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-accent"
       >
-        ← {t("Leads.back_to_list")}
+        <ArrowLeftIcon className="h-4 w-4" />
+        {t("Leads.back_to_list")}
       </Link>
 
       <div className="card">
