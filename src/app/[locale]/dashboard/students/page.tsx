@@ -20,10 +20,9 @@ export default async function StudentsPage({
   const { data: students } = await supabase
     .from("students")
     .select(
-      "id, full_name, email, phone, status, objective, experience_level, photo_url, workout_assignments(workout:workouts(id, name))"
+      "id, full_name, email, phone, status, objective, experience_level, photo_url, anamnesis_submitted_at, workout_assignments(workout:workouts(id, name))"
     )
     .eq("trainer_id", user!.id)
-    .neq("status", "pending")
     .order("created_at", { ascending: false });
 
   return (
@@ -140,18 +139,27 @@ export default async function StudentsPage({
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const styles: Record<string, string> = {
-    active: "bg-success/15 text-success",
-    paused: "bg-warning/15 text-warning",
-    inactive: "bg-bg-elevated text-ink-dim",
+  const map: Record<string, { label: string; className: string }> = {
+    active: { label: "Ativo", className: "bg-success/15 text-success" },
+    pending: {
+      label: "Lead novo",
+      className: "bg-accent/15 text-accent",
+    },
+    paused: { label: "Pausado", className: "bg-warning/15 text-warning" },
+    inactive: {
+      label: "Inativo",
+      className: "bg-bg-elevated text-ink-dim",
+    },
+  };
+  const info = map[status] ?? {
+    label: status,
+    className: "bg-bg-elevated text-ink-dim",
   };
   return (
     <span
-      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-        styles[status] ?? "bg-bg-elevated"
-      }`}
+      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${info.className}`}
     >
-      {status}
+      {info.label}
     </span>
   );
 }
