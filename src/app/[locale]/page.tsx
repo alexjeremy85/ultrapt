@@ -29,6 +29,8 @@ export default async function HomePage({
 
         <HowItWorks />
 
+        <BeforeAfter />
+
         <FeaturesGrid />
 
         <FinalCta ctaSignup={t("Landing.cta_signup")} />
@@ -95,10 +97,10 @@ function Hero({
         </h1>
 
         <p className="mt-6 max-w-xl text-lg leading-relaxed text-ink-muted">
-          Cada personal recebe uma página pública com seu nome, foto, cidade
-          e link próprios. O aluno conhece, faz anamnese e treina sempre dentro
-          da marca <strong className="text-ink">do personal</strong> — não da
-          nossa.
+          Capte alunos no Instagram, prescreva treinos em minutos e receba
+          no <strong className="text-ink">Pix automático todo mês</strong>.
+          Sem WhatsApp lotado de cobrança, sem planilha bagunçada — e tudo
+          dentro da sua marca.
         </p>
 
         <div className="mt-9 flex flex-wrap gap-3">
@@ -304,49 +306,141 @@ function FeaturesGrid() {
   return (
     <section className="mt-32 lg:mt-40">
       <div className="mx-auto max-w-2xl text-center">
-        <SectionEyebrow>Tudo num só lugar</SectionEyebrow>
+        <SectionEyebrow>Por que vale</SectionEyebrow>
         <h2 className="mt-4 text-4xl font-black tracking-tight md:text-5xl">
-          Captação, treino e cobrança.
+          Mais aluno. Menos planilha. Pix todo mês.
         </h2>
         <p className="mt-5 text-lg text-ink-muted">
-          O fluxo completo do personal moderno. Sem precisar amarrar três
-          ferramentas diferentes.
+          Cada item aqui é uma dor que personal trainer enfrenta toda
+          semana. O Ultra PT resolve.
         </p>
       </div>
 
       <div className="mt-14 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         <FeatureCard
-          icon={<ClipboardIcon className="h-5 w-5" />}
-          title="Anamnese estruturada"
-          desc="Histórico de treino, condições médicas, ciclo, sono e alimentação. Tudo guardado e versionável."
-        />
-        <FeatureCard
-          icon={<DumbbellIcon className="h-5 w-5" />}
-          title="Workout builder"
-          desc="Monte treinos por blocos, defina séries, reps, carga, descanso e tempo. Imprima em PDF."
-        />
-        <FeatureCard
-          icon={<PhoneIcon className="h-5 w-5" />}
-          title="App PWA do aluno"
-          desc="Cronômetro, checagem de séries e registro de carga direto no celular do aluno."
-        />
-        <FeatureCard
-          icon={<ChatIcon className="h-5 w-5" />}
-          title="Chat direto"
-          desc="Tire dúvidas, ajuste cargas e acompanhe o aluno sem sair da plataforma."
+          icon={<LinkIcon className="h-5 w-5" />}
+          title="Captação 24 horas"
+          desc="Sua página pública trabalha enquanto você treina. Lead chega pelo Instagram, faz anamnese sozinho e vira aluno antes de você responder no WhatsApp."
         />
         <FeatureCard
           icon={<CardIcon className="h-5 w-5" />}
-          title="Cobrança Pix automática"
-          desc="Mensalidade recorrente. QR Code aparece no app — o aluno paga em segundos."
+          title="Pix automático todo mês"
+          desc="Cobrança recorrente: o aluno recebe o QR Code, paga em segundos e o status atualiza sozinho. Adeus mensagem de “pode pagar amanhã”."
+        />
+        <FeatureCard
+          icon={<ClipboardIcon className="h-5 w-5" />}
+          title="Anamnese sem papel"
+          desc="O lead preenche histórico, lesões, ciclo, sono e alimentação direto na sua página. Você abre o aluno já com a ficha pronta."
+        />
+        <FeatureCard
+          icon={<DumbbellIcon className="h-5 w-5" />}
+          title="Treinos em minutos"
+          desc="Monte ficha por blocos com séries, reps, carga e descanso. Imprime em PDF com a sua marca pra entregar profissional."
+        />
+        <FeatureCard
+          icon={<PhoneIcon className="h-5 w-5" />}
+          title="Aluno treina no celular"
+          desc="Cronômetro, registro de carga e checagem de série no celular do aluno. Sem app pra baixar — abre direto no navegador."
         />
         <FeatureCard
           icon={<ChartIcon className="h-5 w-5" />}
-          title="Dashboard de receita"
-          desc="MRR, alunos ativos, leads pendentes e inadimplência num painel só."
+          title="Receita num painel"
+          desc="MRR, alunos ativos, leads pendentes e quem está inadimplente. Você vê no que mexer pra crescer no mês que vem."
         />
       </div>
     </section>
+  );
+}
+
+function BeforeAfter() {
+  return (
+    <section className="mt-32 lg:mt-40">
+      <div className="mx-auto max-w-2xl text-center">
+        <SectionEyebrow>O que muda</SectionEyebrow>
+        <h2 className="mt-4 text-4xl font-black tracking-tight md:text-5xl">
+          Saia do caos do WhatsApp.
+        </h2>
+        <p className="mt-5 text-lg text-ink-muted">
+          A maioria dos personais que ganham bem tem um problema em comum:
+          metade do tempo é gasto em coisa que não treina ninguém.
+        </p>
+      </div>
+
+      <div className="mt-14 grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="rounded-2xl border border-border bg-bg-card p-6 opacity-80">
+          <div className="text-xs font-bold uppercase tracking-[0.2em] text-ink-dim">
+            Antes
+          </div>
+          <h3 className="mt-3 text-xl font-bold">Você no modo improviso</h3>
+          <ul className="mt-4 space-y-2.5 text-sm text-ink-muted">
+            <CrossLine>Lead chega no DM e some antes de você responder</CrossLine>
+            <CrossLine>Anamnese mandada por áudio, perdida no histórico</CrossLine>
+            <CrossLine>Treino em PDF feito no Word, enviado por e-mail</CrossLine>
+            <CrossLine>Cobrança no Pix manual, dia 5 lembrando todo mundo</CrossLine>
+            <CrossLine>Inadimplência crescendo sem você perceber</CrossLine>
+            <CrossLine>Imagem de “primo que treina” em vez de profissional</CrossLine>
+          </ul>
+        </div>
+
+        <div className="relative rounded-2xl border border-accent/40 bg-bg-card p-6 shadow-glow-sm">
+          <div className="text-xs font-bold uppercase tracking-[0.2em] text-accent">
+            Com o Ultra PT
+          </div>
+          <h3 className="mt-3 text-xl font-bold">Você no modo negócio</h3>
+          <ul className="mt-4 space-y-2.5 text-sm text-ink-muted">
+            <CheckLine>Página com seu nome capta lead 24h, sem você</CheckLine>
+            <CheckLine>Anamnese estruturada, tudo num lugar só</CheckLine>
+            <CheckLine>Treino prescrito e o aluno executa pelo celular</CheckLine>
+            <CheckLine>Pix recorrente, cobra sozinho todo mês</CheckLine>
+            <CheckLine>Painel mostra inadimplência antes de virar problema</CheckLine>
+            <CheckLine>Aparência profissional desde o primeiro clique</CheckLine>
+          </ul>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CrossLine({ children }: { children: React.ReactNode }) {
+  return (
+    <li className="flex items-start gap-2">
+      <span className="mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-bg-elevated text-ink-dim">
+        <svg
+          viewBox="0 0 24 24"
+          className="h-3 w-3"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="3"
+          strokeLinecap="round"
+          aria-hidden
+        >
+          <path d="M6 6l12 12M18 6L6 18" />
+        </svg>
+      </span>
+      {children}
+    </li>
+  );
+}
+
+function CheckLine({ children }: { children: React.ReactNode }) {
+  return (
+    <li className="flex items-start gap-2">
+      <span className="mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-accent/15 text-accent">
+        <svg
+          viewBox="0 0 24 24"
+          className="h-3 w-3"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden
+        >
+          <path d="M20 6L9 17l-5-5" />
+        </svg>
+      </span>
+      <span className="text-ink">{children}</span>
+    </li>
   );
 }
 
