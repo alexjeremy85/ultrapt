@@ -47,18 +47,35 @@ export async function POST(request: Request) {
   let body: AsaasEvent;
   try {
     body = (await request.json()) as AsaasEvent;
-  } catch {
+  } catch (e) {
+    console.error("[asaas-webhook] invalid json", { err: (e as Error).message });
     return NextResponse.json({ error: "invalid json" }, { status: 400 });
   }
+
+  console.log("[asaas-webhook] received", {
+    event: body.event,
+    paymentId: body.payment?.id,
+    paymentStatus: body.payment?.status,
+    subscriptionId: body.subscription?.id,
+  });
 
   const supabase = adminClient();
 
   // Log bruto
-  await supabase.from("billing_events").insert({
-    event_type: body.event,
-    payload: body,
-    processed: false,
-  });
+  const { error: rawLogErr } = await supabase
+    .from("billing_events")
+    .insert({
+      event_type: body.event,
+      payload: body,
+      processed: false,
+    });
+  if (rawLogErr) {
+    console.error("[asaas-webhook] billing_events insert failed", {
+      event: body.event,
+      code: rawLogErr.code,
+      message: rawLogErr.message,
+    });
+  }
 
   // Resolve trainer pelo externalReference (preferido) ou customer
   const ref =
@@ -69,15 +86,27 @@ export async function POST(request: Request) {
   if (ref) {
     trainerId = ref;
   } else if (customer) {
-    const { data } = await supabase
+    const { data, error: lookupErr } = await supabase
       .from("trainers")
       .select("id")
       .eq("asaas_customer_id", customer)
       .maybeSingle();
+    if (lookupErr) {
+      console.error("[asaas-webhook] trainer lookup failed", {
+        customer,
+        code: lookupErr.code,
+        message: lookupErr.message,
+      });
+    }
     trainerId = data?.id ?? null;
   }
 
   if (!trainerId) {
+    console.warn("[asaas-webhook] no trainer matched", {
+      event: body.event,
+      ref,
+      customer,
+    });
     return NextResponse.json({ ok: true, note: "no trainer" });
   }
 
@@ -100,10 +129,25 @@ export async function POST(request: Request) {
   }
 
   if (newStatus) {
-    await supabase
+    const { error: updErr } = await supabase
       .from("trainers")
       .update({ subscription_status: newStatus })
       .eq("id", trainerId);
+    if (updErr) {
+      console.error("[asaas-webhook] trainer status update failed", {
+        trainerId,
+        newStatus,
+        event: body.event,
+        code: updErr.code,
+        message: updErr.message,
+      });
+    } else {
+      console.log("[asaas-webhook] trainer status updated", {
+        trainerId,
+        newStatus,
+        event: body.event,
+      });
+    }
   }
 
   await supabase

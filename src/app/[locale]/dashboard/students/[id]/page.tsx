@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getSiteUrl } from "@/lib/site-url";
 import { ChatIcon, ArrowLeftIcon } from "@/components/icons";
 import { AssignWorkoutForm } from "./AssignWorkoutForm";
+import { CopyLinkButton } from "./CopyLinkButton";
 
 export default async function StudentDetailPage({
   params,
@@ -20,26 +21,83 @@ export default async function StudentDetailPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: student } = await supabase
+  if (!user) {
+    console.error("[students-detail] no user in session", { studentId: id });
+    notFound();
+  }
+
+  // Query do aluno isolada — JOIN aninhado quebrava silenciosamente
+  // e mascarava como 404. Quebrar em duas queries elimina o problema
+  // e deixa logs explicitos pra debug.
+  const { data: student, error: studentError } = await supabase
     .from("students")
     .select(
-      "*, workout_assignments(id, start_date, is_active, workout:workouts(id, name, goal, level))"
+      "id, full_name, email, phone, photo_url, objective, experience_level, access_code"
     )
     .eq("id", id)
-    .eq("trainer_id", user!.id)
+    .eq("trainer_id", user.id)
     .maybeSingle();
 
-  if (!student) notFound();
+  if (studentError) {
+    console.error("[students-detail] student query failed", {
+      studentId: id,
+      trainerId: user.id,
+      code: studentError.code,
+      message: studentError.message,
+      details: studentError.details,
+      hint: studentError.hint,
+    });
+    return (
+      <ErrorPanel
+        message="Não foi possível carregar este aluno. Tente recarregar a página em alguns segundos."
+        code={studentError.code}
+      />
+    );
+  }
 
-  const { data: workouts } = await supabase
+  if (!student) {
+    console.warn("[students-detail] student not found", {
+      studentId: id,
+      trainerId: user.id,
+    });
+    notFound();
+  }
+
+  // Assignments + workouts em queries separadas — se uma falhar,
+  // o restante da pagina ainda renderiza.
+  const { data: assignmentsRaw, error: assignError } = await supabase
+    .from("workout_assignments")
+    .select(
+      "id, start_date, is_active, workout:workouts(id, name, goal, level)"
+    )
+    .eq("student_id", student.id)
+    .order("created_at", { ascending: false });
+
+  if (assignError) {
+    console.error("[students-detail] assignments query failed", {
+      studentId: id,
+      code: assignError.code,
+      message: assignError.message,
+    });
+  }
+
+  const { data: workouts, error: workoutsError } = await supabase
     .from("workouts")
     .select("id, name, goal")
-    .eq("trainer_id", user!.id)
+    .eq("trainer_id", user.id)
     .order("created_at", { ascending: false });
+
+  if (workoutsError) {
+    console.error("[students-detail] workouts list query failed", {
+      trainerId: user.id,
+      code: workoutsError.code,
+      message: workoutsError.message,
+    });
+  }
 
   const studentLink = `${getSiteUrl()}/aluno/${student.access_code}`;
 
-  const assignments = (student.workout_assignments ?? []) as Array<{
+  const assignments = (assignmentsRaw ?? []) as unknown as Array<{
     id: string;
     start_date: string;
     is_active: boolean;
@@ -103,10 +161,15 @@ export default async function StudentDetailPage({
         <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-dim">
           Acesso do aluno
         </h2>
-        <p className="mt-1 text-xs text-ink-muted">
-          Compartilhe o link OU informe apenas o código de acesso (caso ele entre pela sua página pública).
+        <p className="mt-2 text-sm text-ink-muted">
+          Mande este link pelo WhatsApp.{" "}
+          <strong className="text-ink">
+            Seu aluno abre direto no celular, sem precisar criar conta nem
+            senha.
+          </strong>
         </p>
-        <div className="mt-3 space-y-2">
+
+        <div className="mt-4 space-y-3">
           <div>
             <div className="text-[10px] font-bold uppercase tracking-widest text-ink-dim">
               Código de acesso
@@ -115,20 +178,29 @@ export default async function StudentDetailPage({
               {student.access_code}
             </code>
           </div>
-          <div className="flex items-center gap-2">
-            <code className="flex-1 truncate rounded-lg bg-bg-surface px-3 py-2 text-xs text-accent">
-              {studentLink}
-            </code>
-            {student.phone && (
-              <a
-                href={`https://wa.me/55${student.phone}?text=${encodeURIComponent(`Oi ${student.full_name}, aqui esta o link do seu app de treino: ${studentLink}`)}`}
-                target="_blank"
-                rel="noopener"
-                className="btn-secondary text-sm"
-              >
-                Enviar WhatsApp
-              </a>
-            )}
+
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-ink-dim">
+              Link do aluno
+            </div>
+            <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center">
+              <code className="flex-1 truncate rounded-lg bg-bg-surface px-3 py-2 text-xs text-accent">
+                {studentLink}
+              </code>
+              <div className="flex shrink-0 gap-2">
+                <CopyLinkButton link={studentLink} />
+                {student.phone && (
+                  <a
+                    href={`https://wa.me/55${student.phone}?text=${encodeURIComponent(`Oi ${student.full_name}, aqui está o link do seu app de treino: ${studentLink}`)}`}
+                    target="_blank"
+                    rel="noopener"
+                    className="btn-secondary text-sm"
+                  >
+                    Enviar WhatsApp
+                  </a>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -181,6 +253,35 @@ export default async function StudentDetailPage({
             workouts={workouts ?? []}
           />
         </div>
+      </div>
+    </div>
+  );
+}
+
+function ErrorPanel({
+  message,
+  code,
+}: {
+  message: string;
+  code?: string;
+}) {
+  return (
+    <div className="mx-auto max-w-2xl">
+      <div className="card border-danger/40 bg-danger/5">
+        <h1 className="text-lg font-bold text-danger">Erro ao carregar</h1>
+        <p className="mt-2 text-sm text-ink">{message}</p>
+        {code && (
+          <p className="mt-3 text-xs text-ink-dim">
+            Código técnico: <code>{code}</code>
+          </p>
+        )}
+        <Link
+          href="/dashboard/students"
+          className="btn-secondary mt-4 inline-flex items-center gap-1.5 text-sm"
+        >
+          <ArrowLeftIcon className="h-4 w-4" />
+          Voltar para alunos
+        </Link>
       </div>
     </div>
   );

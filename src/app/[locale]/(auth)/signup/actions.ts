@@ -42,6 +42,12 @@ export async function signup(formData: FormData) {
   });
 
   if (error) {
+    console.error("[signup] supabase signUp failed", {
+      email,
+      code: error.code,
+      message: error.message,
+      status: error.status,
+    });
     redirect({
       href: `/signup?error=${encodeURIComponent(error.message)}`,
       locale,
@@ -49,10 +55,18 @@ export async function signup(formData: FormData) {
   }
 
   if (data.session) {
+    console.log("[signup] success with active session", {
+      userId: data.user?.id,
+      email,
+    });
     revalidatePath("/", "layout");
     redirect({ href: "/dashboard", locale });
   }
 
+  console.log("[signup] success awaiting email confirmation", {
+    userId: data.user?.id,
+    email,
+  });
   redirect({
     href: `/login?error=${encodeURIComponent(t("Auth.confirm_email_message"))}`,
     locale,

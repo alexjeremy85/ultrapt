@@ -92,43 +92,72 @@ export async function submitAnamnesis(formData: FormData) {
 
   // Valida que o trainer existe (impede inserir lixo em conta inexistente)
   const admin2 = createAdminClient();
-  const { data: trainerExists } = await admin2
+  const { data: trainerExists, error: trainerErr } = await admin2
     .from("trainers")
     .select("id")
     .eq("id", trainerId)
     .maybeSingle();
+  if (trainerErr) {
+    console.error("[anamnesis] trainer lookup failed", {
+      trainerId,
+      slug,
+      code: trainerErr.code,
+      message: trainerErr.message,
+    });
+  }
   if (!trainerExists) {
+    console.warn("[anamnesis] trainer not found, redirecting", {
+      trainerId,
+      slug,
+    });
     redirect({ href: `/`, locale });
   }
 
   // Insert via admin client com whitelist explicita de colunas.
-  // (RLS anon insert sera revogada via migration 0013)
-  const { error } = await admin2.from("students").insert({
-    trainer_id: trainerId,
-    full_name: fullName,
-    email,
-    phone,
-    birth_date: birthDate,
-    objective,
-    experience_level:
-      experience === "iniciante" ||
-      experience === "intermediario" ||
-      experience === "avancado"
-        ? experience
-        : null,
-    status: "pending",
-    photo_url: photoUrl,
-    anamnesis_data: data,
-    anamnesis_submitted_at: new Date().toISOString(),
-    // user_id e access_code ficam null/default - o cliente NUNCA controla
-  });
+  // (RLS anon insert revogada via migration 0014)
+  const { error, data: insertedRow } = await admin2
+    .from("students")
+    .insert({
+      trainer_id: trainerId,
+      full_name: fullName,
+      email,
+      phone,
+      birth_date: birthDate,
+      objective,
+      experience_level:
+        experience === "iniciante" ||
+        experience === "intermediario" ||
+        experience === "avancado"
+          ? experience
+          : null,
+      status: "pending",
+      photo_url: photoUrl,
+      anamnesis_data: data,
+      anamnesis_submitted_at: new Date().toISOString(),
+      // user_id e access_code ficam null/default - o cliente NUNCA controla
+    })
+    .select("id")
+    .single();
 
   if (error) {
+    console.error("[anamnesis] insert failed", {
+      trainerId,
+      slug,
+      fullName,
+      code: error.code,
+      message: error.message,
+      details: error.details,
+    });
     redirect({
       href: `/pt/${slug}/anamnese?error=${encodeURIComponent(error.message)}`,
       locale,
     });
   }
 
+  console.log("[anamnesis] success", {
+    trainerId,
+    slug,
+    studentId: insertedRow?.id,
+  });
   redirect({ href: `/pt/${slug}/anamnese?success=1`, locale });
 }

@@ -19,15 +19,25 @@ export async function login(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { error, data } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
   if (error) {
+    console.warn("[login] failed", {
+      email,
+      code: error.code,
+      message: error.message,
+      status: error.status,
+    });
     redirect({
       href: `/login?error=${encodeURIComponent(error.message)}`,
       locale,
     });
   }
 
+  console.log("[login] success", { userId: data.user?.id, email });
   revalidatePath("/", "layout");
   redirect({ href: "/dashboard", locale });
 }
