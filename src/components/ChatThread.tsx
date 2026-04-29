@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ChatMessage } from "@/lib/chat-types";
+import { ChatIcon } from "@/components/icons";
 
 type Props = {
   initialMessages: ChatMessage[];
@@ -128,8 +129,10 @@ export function ChatThread({
       <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-center">
-            <div className="text-3xl">💬</div>
-            <p className="mt-2 text-sm text-ink-muted">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent/10 text-accent">
+              <ChatIcon className="h-6 w-6" />
+            </div>
+            <p className="mt-3 text-sm text-ink-muted">
               Nenhuma mensagem ainda. Diga oi!
             </p>
           </div>

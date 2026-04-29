@@ -2,6 +2,7 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { ChatIcon, ClockIcon } from "@/components/icons";
 
 export default async function StudentHomePage({
   params,
@@ -67,9 +68,10 @@ export default async function StudentHomePage({
               <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs">
                 <Link
                   href={`/aluno/${code}/chat`}
-                  className="font-semibold text-accent hover:underline"
+                  className="inline-flex items-center gap-1 font-semibold text-accent hover:underline"
                 >
-                  💬 Conversar
+                  <ChatIcon className="h-3.5 w-3.5" />
+                  Conversar
                 </Link>
                 {trainer.whatsapp_phone && (
                   <a
@@ -109,8 +111,10 @@ export default async function StudentHomePage({
         </div>
 
         {!assignments || assignments.length === 0 ? (
-          <div className="card mt-6 text-center py-10">
-            <div className="mb-3 text-4xl">⏳</div>
+          <div className="card mt-6 text-center py-12">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-accent/10 text-accent">
+              <ClockIcon className="h-7 w-7" />
+            </div>
             <h2 className="text-lg font-semibold">
               {t("StudentApp.no_workout_title")}
             </h2>

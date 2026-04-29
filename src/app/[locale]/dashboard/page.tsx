@@ -2,6 +2,14 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSiteUrl } from "@/lib/site-url";
+import {
+  TrendingUpIcon,
+  UsersIcon,
+  UserIcon,
+  DumbbellIcon,
+  PlusIcon,
+  ExternalLinkIcon,
+} from "@/components/icons";
 
 export default async function DashboardPage({
   params,
@@ -59,10 +67,27 @@ export default async function DashboardPage({
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Card icon="🔥" title={t("Dashboard.card_active_students")} value={activeStudents ?? 0} />
-        <Card icon="👥" title={t("Dashboard.card_total_students")} value={studentsCount ?? 0} />
-        <Card icon="👋" title={t("Dashboard.card_pending_leads")} value={pendingLeads ?? 0} highlight={(pendingLeads ?? 0) > 0} />
-        <Card icon="💪" title={t("Dashboard.card_workouts")} value={workoutCount ?? 0} />
+        <Card
+          icon={<TrendingUpIcon className="h-5 w-5" />}
+          title={t("Dashboard.card_active_students")}
+          value={activeStudents ?? 0}
+        />
+        <Card
+          icon={<UsersIcon className="h-5 w-5" />}
+          title={t("Dashboard.card_total_students")}
+          value={studentsCount ?? 0}
+        />
+        <Card
+          icon={<UserIcon className="h-5 w-5" />}
+          title={t("Dashboard.card_pending_leads")}
+          value={pendingLeads ?? 0}
+          highlight={(pendingLeads ?? 0) > 0}
+        />
+        <Card
+          icon={<DumbbellIcon className="h-5 w-5" />}
+          title={t("Dashboard.card_workouts")}
+          value={workoutCount ?? 0}
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -78,8 +103,9 @@ export default async function DashboardPage({
             <Link
               href={`/pt/${trainer.slug}`}
               target="_blank"
-              className="btn-secondary"
+              className="btn-secondary inline-flex items-center gap-1.5"
             >
+              <ExternalLinkIcon className="h-4 w-4" />
               {t("Dashboard.open")}
             </Link>
           </div>
@@ -90,11 +116,19 @@ export default async function DashboardPage({
             {t("Dashboard.quick_actions")}
           </h2>
           <div className="mt-4 space-y-2">
-            <Link href="/dashboard/students/new" className="btn-primary w-full">
-              + {t("Dashboard.action_new_student")}
+            <Link
+              href="/dashboard/students/new"
+              className="btn-primary inline-flex w-full items-center justify-center gap-1.5"
+            >
+              <PlusIcon className="h-4 w-4" />
+              {t("Dashboard.action_new_student")}
             </Link>
-            <Link href="/dashboard/workouts/new" className="btn-secondary w-full">
-              + {t("Dashboard.action_new_workout")}
+            <Link
+              href="/dashboard/workouts/new"
+              className="btn-secondary inline-flex w-full items-center justify-center gap-1.5"
+            >
+              <PlusIcon className="h-4 w-4" />
+              {t("Dashboard.action_new_workout")}
             </Link>
             <Link href="/dashboard/profile" className="btn-ghost w-full">
               {t("Dashboard.action_edit_profile")}
@@ -112,7 +146,7 @@ function Card({
   value,
   highlight,
 }: {
-  icon: string;
+  icon: React.ReactNode;
   title: string;
   value: string | number;
   highlight?: boolean;
@@ -130,7 +164,15 @@ function Card({
           </div>
           <div className="mt-1 text-3xl font-bold">{value}</div>
         </div>
-        <div className="text-2xl opacity-70">{icon}</div>
+        <div
+          className={`flex h-9 w-9 items-center justify-center rounded-lg ${
+            highlight
+              ? "bg-accent/15 text-accent"
+              : "bg-bg-elevated text-ink-muted"
+          }`}
+        >
+          {icon}
+        </div>
       </div>
     </div>
   );

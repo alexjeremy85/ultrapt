@@ -1,6 +1,7 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { CheckIcon } from "@/components/icons";
 import { AnamnesisForm } from "./AnamnesisForm";
 
 export default async function AnamnesisPage({
@@ -29,8 +30,8 @@ export default async function AnamnesisPage({
       <main className="min-h-screen bg-bg">
         <div className="mx-auto max-w-xl px-5 py-16">
           <div className="card text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success/15 text-3xl">
-              ✓
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success/20 text-success">
+              <CheckIcon className="h-8 w-8" />
             </div>
             <h1 className="text-2xl font-bold">
               {t("Anamnesis.success_title")}

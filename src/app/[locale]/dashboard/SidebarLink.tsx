@@ -8,7 +8,7 @@ export function SidebarLink({
   label,
 }: {
   href: string;
-  icon: string;
+  icon: React.ReactNode;
   label: string;
 }) {
   const pathname = usePathname();
@@ -26,7 +26,7 @@ export function SidebarLink({
           : "text-ink-muted hover:bg-bg-card hover:text-ink"
       }`}
     >
-      <span className="text-base">{icon}</span>
+      <span className="flex h-5 w-5 items-center justify-center">{icon}</span>
       <span>{label}</span>
     </Link>
   );

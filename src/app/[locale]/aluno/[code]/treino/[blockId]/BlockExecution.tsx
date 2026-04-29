@@ -3,6 +3,7 @@
 import { useState, useEffect, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
+import { CheckIcon, PlayIcon, SparkleIcon } from "@/components/icons";
 import { finishBlockExecution, logSet } from "./actions";
 
 type Exercise = {
@@ -155,12 +156,14 @@ export function BlockExecution({
                       rel="noopener"
                       className="mt-1 inline-block text-xs text-accent hover:underline"
                     >
-                      ▶ {t("StudentApp.watch_video")}
+                      <PlayIcon className="mr-1 inline h-3 w-3" />
+                      {t("StudentApp.watch_video")}
                     </a>
                   )}
                   {e.notes && (
-                    <div className="mt-2 rounded bg-bg-surface px-2 py-1 text-xs text-ink-muted">
-                      💡 {e.notes}
+                    <div className="mt-2 flex items-start gap-1.5 rounded bg-bg-surface px-2 py-1.5 text-xs text-ink-muted">
+                      <SparkleIcon className="mt-0.5 h-3 w-3 shrink-0 text-accent" />
+                      <span>{e.notes}</span>
                     </div>
                   )}
                 </div>
@@ -183,7 +186,7 @@ export function BlockExecution({
                           : "border border-border-strong bg-bg-elevated hover:border-accent hover:text-accent"
                       }`}
                     >
-                      {isDone ? "✓" : n}
+                      {isDone ? <CheckIcon className="h-4 w-4" /> : n}
                     </button>
                   );
                 })}

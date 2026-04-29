@@ -1,5 +1,6 @@
 import { Link } from "@/i18n/navigation";
 import { ensureReadableOnLight, contrastingTextColor } from "@/lib/colorContrast";
+import { HighlightIcon } from "@/lib/highlight-icons";
 import type { TemplateProps } from "./types";
 
 export function MinimalTemplate({ trainer, ctaUrl, studentLoginSlot }: TemplateProps) {
@@ -133,7 +134,9 @@ export function MinimalTemplate({ trainer, ctaUrl, studentLoginSlot }: TemplateP
                 key={i}
                 className="rounded-lg border border-slate-200 bg-slate-50 p-5"
               >
-                {h.icon && <div className="mb-2 text-2xl">{h.icon}</div>}
+                <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-slate-200 text-slate-700">
+                  <HighlightIcon name={h.icon} className="h-4 w-4" />
+                </div>
                 <div className="font-semibold">{h.title}</div>
                 {h.description && (
                   <div className="mt-1 text-sm text-slate-600">

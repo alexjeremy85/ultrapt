@@ -47,24 +47,29 @@ type Trainer = {
   }> | null;
 };
 
-const TEMPLATES = [
+const TEMPLATES: Array<{
+  id: string;
+  name: string;
+  description: string;
+  swatch: string;
+}> = [
   {
     id: "bold",
     name: "Bold",
     description: "Hero gigante com gradiente. Visual impactante.",
-    preview: "🟧",
+    swatch: "linear-gradient(135deg, #ff6b00 0%, #ff8533 50%, #ffaa66 100%)",
   },
   {
     id: "minimal",
     name: "Minimal",
     description: "Profissional, fundo claro, layout enxuto.",
-    preview: "⬜",
+    swatch: "linear-gradient(135deg, #f5f5f5 0%, #e5e5e5 100%)",
   },
   {
     id: "energy",
     name: "Energy",
     description: "Hero full-bleed, atlético, alta conversão.",
-    preview: "⚡",
+    swatch: "linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)",
   },
 ];
 
@@ -320,8 +325,11 @@ export function ProfileForm({
                     : "border-border bg-bg-surface hover:border-border-strong"
                 }`}
               >
-                <div className="text-3xl">{tpl.preview}</div>
-                <div className="mt-2 font-bold">{tpl.name}</div>
+                <div
+                  className="h-12 w-full rounded-lg border border-border"
+                  style={{ background: tpl.swatch }}
+                />
+                <div className="mt-3 font-bold">{tpl.name}</div>
                 <div className="mt-1 text-xs text-ink-muted">
                   {tpl.description}
                 </div>

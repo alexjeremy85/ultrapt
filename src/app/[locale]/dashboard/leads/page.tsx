@@ -1,6 +1,7 @@
 import { setRequestLocale, getTranslations, getFormatter } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { UserIcon } from "@/components/icons";
 
 export default async function LeadsPage({
   params,
@@ -35,7 +36,9 @@ export default async function LeadsPage({
 
       {!leads || leads.length === 0 ? (
         <div className="card text-center py-16">
-          <div className="mb-3 text-4xl">👋</div>
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-accent/10 text-accent">
+            <UserIcon className="h-7 w-7" />
+          </div>
           <h2 className="text-lg font-semibold">{t("Leads.empty_title")}</h2>
           <p className="mt-1 text-sm text-ink-muted">
             {t("Leads.empty_message")}
