@@ -546,6 +546,29 @@ function Pricing() {
       <p className="mt-6 text-center text-sm text-ink-dim">
         Pix mensal recorrente · Sem fidelidade · Cancela a qualquer momento
       </p>
+
+      {/* ROI math — reframe price as payback */}
+      <div className="mx-auto mt-10 max-w-3xl rounded-2xl border border-border bg-bg-card p-6 md:p-8">
+        <div className="flex items-start gap-4">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/15 text-accent">
+            <CalculatorIcon className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="text-xs font-bold uppercase tracking-[0.2em] text-accent">
+              A conta que importa
+            </div>
+            <h3 className="mt-2 text-xl font-bold leading-snug">
+              1 aluno novo paga o plano. O segundo já é lucro.
+            </h3>
+            <p className="mt-3 text-sm leading-relaxed text-ink-muted">
+              Personal cobra entre <strong className="text-ink">R$ 200 e R$ 500</strong>{" "}
+              por aluno/mês. O plano Pro custa <strong className="text-ink">R$ 119</strong>.
+              Captou 1 aluno via sua página? O Ultra PT já se pagou com sobra.
+              Captou 2? Você está lucrando com o sistema.
+            </p>
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
@@ -561,7 +584,7 @@ function FinalCta({ ctaSignup }: { ctaSignup: string }) {
         <div className="relative">
           <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-accent">
             <StarIcon className="h-3.5 w-3.5" />
-            Fundador · primeiros 50 PTs com preço vitalício
+            Lançamento · primeiros 50 PTs
           </div>
 
           <h2 className="mt-6 text-3xl font-black tracking-tight md:text-5xl">
@@ -571,10 +594,22 @@ function FinalCta({ ctaSignup }: { ctaSignup: string }) {
             </span>
             ?
           </h2>
-          <p className="mt-5 text-lg text-ink-muted">
-            Entre cedo, garanta o preço de fundador pra sempre. 14 dias
-            grátis, sem cartão.
-          </p>
+
+          <div className="mx-auto mt-6 max-w-xl">
+            <div className="rounded-2xl border border-accent/40 bg-bg-surface px-5 py-4 text-left">
+              <div className="flex items-baseline gap-2">
+                <span className="text-sm text-ink-dim line-through">R$ 119</span>
+                <span className="text-3xl font-black text-accent">R$ 59</span>
+                <span className="text-sm text-ink-muted">/ mês</span>
+              </div>
+              <p className="mt-1 text-sm text-ink-muted">
+                <strong className="text-ink">3 primeiros meses pela metade.</strong>{" "}
+                Depois R$ 119/mês <strong className="text-ink">congelado pra sempre</strong> —
+                seu preço de fundador, sem reajuste.
+              </p>
+            </div>
+          </div>
+
           <div className="mt-8 flex justify-center">
             <Link
               href="/signup"
@@ -584,9 +619,38 @@ function FinalCta({ ctaSignup }: { ctaSignup: string }) {
               <ArrowRightIcon className="ml-2 h-4 w-4" />
             </Link>
           </div>
+
+          <ul className="mx-auto mt-8 grid max-w-2xl grid-cols-1 gap-3 text-left text-sm sm:grid-cols-3">
+            <GuaranteeItem>
+              <strong className="text-ink">14 dias grátis</strong>
+              <br />
+              sem cadastrar cartão
+            </GuaranteeItem>
+            <GuaranteeItem>
+              <strong className="text-ink">Cancela com 1 clique</strong>
+              <br />
+              sem fidelidade, sem multa
+            </GuaranteeItem>
+            <GuaranteeItem>
+              <strong className="text-ink">Não pagou, não cobramos</strong>
+              <br />
+              sai sem prejuízo se não rolar
+            </GuaranteeItem>
+          </ul>
         </div>
       </div>
     </section>
+  );
+}
+
+function GuaranteeItem({ children }: { children: React.ReactNode }) {
+  return (
+    <li className="flex items-start gap-2.5 rounded-xl border border-border bg-bg-card px-4 py-3 text-ink-muted">
+      <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent/15 text-accent">
+        <CheckIcon className="h-3 w-3" />
+      </span>
+      <span className="leading-snug">{children}</span>
+    </li>
   );
 }
 
@@ -967,6 +1031,24 @@ function StarIcon({ className }: IconProps) {
       aria-hidden
     >
       <path d="M12 2.5l3.09 6.26 6.91 1-5 4.87 1.18 6.87L12 18.27l-6.18 3.23L7 14.63 2 9.76l6.91-1L12 2.5z" />
+    </svg>
+  );
+}
+
+function CalculatorIcon({ className }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden
+    >
+      <rect x="4" y="2" width="16" height="20" rx="2" />
+      <path d="M8 6h8M8 10h2M12 10h2M16 10h0M8 14h2M12 14h2M16 14h0M8 18h2M12 18h2M16 18h0" />
     </svg>
   );
 }
