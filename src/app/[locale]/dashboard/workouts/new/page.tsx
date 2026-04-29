@@ -1,5 +1,6 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { ArrowLeftIcon } from "@/components/icons";
 import { createWorkout } from "./actions";
 
 export default async function NewWorkoutPage({
@@ -18,9 +19,10 @@ export default async function NewWorkoutPage({
     <div className="mx-auto max-w-2xl space-y-6">
       <Link
         href="/dashboard/workouts"
-        className="text-sm text-ink-muted hover:text-accent"
+        className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-accent"
       >
-        ← {t("Common.back")}
+        <ArrowLeftIcon className="h-4 w-4" />
+        {t("Common.back")}
       </Link>
       <div>
         <h1 className="text-2xl font-bold">{t("Workouts.new_title")}</h1>

@@ -2,6 +2,7 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSiteUrl } from "@/lib/site-url";
+import { ExternalLinkIcon } from "@/components/icons";
 import { ProfileForm } from "./ProfileForm";
 
 const FULL_COLS = "*";
@@ -86,9 +87,10 @@ export default async function ProfilePage({
         <Link
           href={`/pt/${trainer.slug}`}
           target="_blank"
-          className="btn-secondary text-sm"
+          className="btn-secondary inline-flex items-center gap-1.5 text-sm"
         >
-          {t("Profile.btn_view_public")} ↗
+          {t("Profile.btn_view_public")}
+          <ExternalLinkIcon className="h-4 w-4" />
         </Link>
       </div>
 

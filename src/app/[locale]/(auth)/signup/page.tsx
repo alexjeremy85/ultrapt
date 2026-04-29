@@ -1,5 +1,6 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { ArrowRightIcon } from "@/components/icons";
 import { signup } from "./actions";
 
 export default async function SignupPage({
@@ -67,8 +68,12 @@ export default async function SignupPage({
           />
           <p className="hint">{t("Auth.field_password_hint")}</p>
         </div>
-        <button type="submit" className="btn-primary w-full">
-          {t("Auth.btn_signup")} →
+        <button
+          type="submit"
+          className="btn-primary inline-flex w-full items-center justify-center gap-2"
+        >
+          {t("Auth.btn_signup")}
+          <ArrowRightIcon className="h-4 w-4" />
         </button>
       </form>
 

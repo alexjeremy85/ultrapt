@@ -1,6 +1,11 @@
 import { Link } from "@/i18n/navigation";
 import { ensureReadableOnDark, contrastingTextColor } from "@/lib/colorContrast";
-import { WhatsappIcon, InstagramIcon } from "@/components/icons";
+import {
+  WhatsappIcon,
+  InstagramIcon,
+  StarRating,
+  ArrowRightIcon,
+} from "@/components/icons";
 import { HighlightIcon } from "@/lib/highlight-icons";
 import type { TemplateProps } from "./types";
 
@@ -163,10 +168,11 @@ export function BoldTemplate({ trainer, ctaUrl, studentLoginSlot }: TemplateProp
                   >
                     {tt.rating && (
                       <div className="mb-2" style={{ color: accent }}>
-                        {"★".repeat(tt.rating)}
-                        <span className="text-ink-dim">
-                          {"★".repeat(5 - tt.rating)}
-                        </span>
+                        <StarRating
+                          value={tt.rating}
+                          filledClassName=""
+                          emptyClassName="opacity-30"
+                        />
                       </div>
                     )}
                     <p className="text-sm italic text-ink">"{tt.text}"</p>
@@ -196,7 +202,10 @@ export function BoldTemplate({ trainer, ctaUrl, studentLoginSlot }: TemplateProp
                   boxShadow: `0 0 30px 0 ${accent}66`,
                 }}
               >
-                {cta} →
+                <span className="inline-flex items-center gap-2">
+                  {cta}
+                  <ArrowRightIcon className="h-4 w-4" />
+                </span>
               </Link>
 
               {(trainer.whatsapp_phone || trainer.instagram_handle) && (

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
+import { CloseIcon, PlayIcon } from "@/components/icons";
 import {
   addBlock,
   updateBlock,
@@ -169,10 +170,11 @@ export function WorkoutBuilder({
               />
               <button
                 onClick={() => onDeleteBlock(block.id)}
-                className="btn-danger text-sm"
+                className="btn-danger inline-flex items-center justify-center text-sm"
                 title={t("Workouts.btn_remove")}
+                aria-label={t("Workouts.btn_remove")}
               >
-                ✕
+                <CloseIcon className="h-4 w-4" />
               </button>
             </div>
             <textarea
@@ -211,18 +213,20 @@ export function WorkoutBuilder({
                                 href={`https://youtube.com/watch?v=${ytId}`}
                                 target="_blank"
                                 rel="noopener"
-                                className="text-xs text-accent hover:underline"
+                                className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
                               >
-                                ▶ vídeo
+                                <PlayIcon className="h-3 w-3" />
+                                vídeo
                               </a>
                             )}
                           </div>
                         </div>
                         <button
                           onClick={() => onRemoveExercise(block.id, we.id)}
-                          className="text-xs text-ink-dim hover:text-danger"
+                          className="inline-flex items-center text-ink-dim hover:text-danger"
+                          aria-label="Remover"
                         >
-                          ✕
+                          <CloseIcon className="h-4 w-4" />
                         </button>
                       </div>
 
@@ -382,9 +386,10 @@ function ExercisePicker({
           </h3>
           <button
             onClick={onClose}
-            className="text-ink-dim hover:text-ink"
+            className="inline-flex items-center text-ink-dim hover:text-ink"
+            aria-label="Fechar"
           >
-            ✕
+            <CloseIcon className="h-4 w-4" />
           </button>
         </div>
 

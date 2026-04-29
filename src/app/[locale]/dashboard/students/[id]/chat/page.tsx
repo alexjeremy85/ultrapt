@@ -2,6 +2,7 @@ import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { ArrowLeftIcon } from "@/components/icons";
 import { TrainerChatClient } from "./TrainerChatClient";
 import { trainerLoadMessages } from "@/lib/chat";
 import type { ChatMessage } from "@/lib/chat-types";
@@ -35,9 +36,10 @@ export default async function TrainerChatPage({
     <div className="mx-auto max-w-3xl space-y-4">
       <Link
         href={`/dashboard/students/${id}`}
-        className="text-sm text-ink-muted hover:text-accent"
+        className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-accent"
       >
-        ← Voltar pro aluno
+        <ArrowLeftIcon className="h-4 w-4" />
+        Voltar pro aluno
       </Link>
 
       <h1 className="text-2xl font-bold">Conversa com {student.full_name}</h1>

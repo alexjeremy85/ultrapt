@@ -130,6 +130,39 @@ export function StarIcon({ className }: IconProps) {
   );
 }
 
+/**
+ * Avalia em estrelas. As preenchidas pegam `filledClassName` (default: text-accent),
+ * as vazias pegam `emptyClassName` (default: text-ink-dim). Tamanho via size.
+ */
+export function StarRating({
+  value,
+  total = 5,
+  size = "h-4 w-4",
+  filledClassName = "text-accent",
+  emptyClassName = "text-ink-dim opacity-40",
+}: {
+  value: number;
+  total?: number;
+  size?: string;
+  filledClassName?: string;
+  emptyClassName?: string;
+}) {
+  const v = Math.max(0, Math.min(total, Math.round(value)));
+  return (
+    <div
+      className="inline-flex items-center gap-0.5"
+      aria-label={`${v} de ${total} estrelas`}
+    >
+      {Array.from({ length: total }).map((_, i) => (
+        <StarIcon
+          key={i}
+          className={`${size} ${i < v ? filledClassName : emptyClassName}`}
+        />
+      ))}
+    </div>
+  );
+}
+
 export function SparkleIcon({ className }: IconProps) {
   return (
     <S className={className}>

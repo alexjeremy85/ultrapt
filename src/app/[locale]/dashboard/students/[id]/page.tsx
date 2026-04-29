@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSiteUrl } from "@/lib/site-url";
-import { ChatIcon } from "@/components/icons";
+import { ChatIcon, ArrowLeftIcon } from "@/components/icons";
 import { AssignWorkoutForm } from "./AssignWorkoutForm";
 
 export default async function StudentDetailPage({
@@ -50,9 +50,10 @@ export default async function StudentDetailPage({
     <div className="mx-auto max-w-3xl space-y-6">
       <Link
         href="/dashboard/students"
-        className="text-sm text-ink-muted hover:text-accent"
+        className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-accent"
       >
-        ← {t("Common.back")}
+        <ArrowLeftIcon className="h-4 w-4" />
+        {t("Common.back")}
       </Link>
 
       <div className="card">
