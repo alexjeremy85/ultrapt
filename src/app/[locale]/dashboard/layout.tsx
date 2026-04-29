@@ -1,6 +1,15 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link, redirect } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
+import {
+  Logomark,
+  HomeIcon,
+  UsersIcon,
+  UserIcon,
+  DumbbellIcon,
+  CardIcon,
+  BadgeIcon,
+} from "@/components/icons";
 import { logout } from "../(auth)/login/actions";
 import { SidebarLink } from "./SidebarLink";
 import { TrialBanner } from "./TrialBanner";
@@ -39,19 +48,41 @@ export default async function DashboardLayout({
             href="/dashboard"
             className="flex items-center gap-2 text-lg font-bold"
           >
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-hype text-black">
-              ⚡
-            </span>
+            <Logomark />
             Ultra PT
           </Link>
         </div>
         <nav className="flex-1 space-y-0.5 p-3 text-sm">
-          <SidebarLink href="/dashboard" icon="📊" label={t("Nav.dashboard")} />
-          <SidebarLink href="/dashboard/leads" icon="👋" label={t("Nav.leads")} />
-          <SidebarLink href="/dashboard/students" icon="👥" label={t("Nav.students")} />
-          <SidebarLink href="/dashboard/workouts" icon="💪" label={t("Nav.workouts")} />
-          <SidebarLink href="/dashboard/profile" icon="🪪" label={t("Nav.profile")} />
-          <SidebarLink href="/dashboard/billing" icon="💳" label={t("Nav.billing")} />
+          <SidebarLink
+            href="/dashboard"
+            icon={<HomeIcon className="h-4 w-4" />}
+            label={t("Nav.dashboard")}
+          />
+          <SidebarLink
+            href="/dashboard/leads"
+            icon={<UserIcon className="h-4 w-4" />}
+            label={t("Nav.leads")}
+          />
+          <SidebarLink
+            href="/dashboard/students"
+            icon={<UsersIcon className="h-4 w-4" />}
+            label={t("Nav.students")}
+          />
+          <SidebarLink
+            href="/dashboard/workouts"
+            icon={<DumbbellIcon className="h-4 w-4" />}
+            label={t("Nav.workouts")}
+          />
+          <SidebarLink
+            href="/dashboard/profile"
+            icon={<BadgeIcon className="h-4 w-4" />}
+            label={t("Nav.profile")}
+          />
+          <SidebarLink
+            href="/dashboard/billing"
+            icon={<CardIcon className="h-4 w-4" />}
+            label={t("Nav.billing")}
+          />
         </nav>
 
         <div className="border-t border-border p-4">

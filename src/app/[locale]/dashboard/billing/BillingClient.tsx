@@ -5,6 +5,12 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { PLANS, type PlanId } from "@/lib/plans";
 import {
+  ClockIcon,
+  TicketIcon,
+  CheckIcon,
+  CloseIcon,
+} from "@/components/icons";
+import {
   startSubscription,
   checkVoucher,
   getPaymentStatus,
@@ -197,8 +203,9 @@ export function BillingClient({
         )}
         {status === "pending_payment" && !pixData && (
           <div className="mt-4 rounded-xl border border-warning/40 bg-warning/10 p-4 text-sm">
-            <div className="font-bold text-warning">
-              ⏰ Sua assinatura está aguardando pagamento
+            <div className="flex items-center gap-2 font-bold text-warning">
+              <ClockIcon className="h-4 w-4" />
+              Sua assinatura está aguardando pagamento
             </div>
             <p className="mt-1 text-xs text-ink-muted">
               Carregando QR Code do Pix...
@@ -235,7 +242,11 @@ export function BillingClient({
           {!cpfReady && cpf.length > 0 && (
             <p className="hint text-warning">CPF incompleto</p>
           )}
-          {cpfReady && <p className="hint text-success">CPF válido ✓</p>}
+          {cpfReady && (
+            <p className="hint flex items-center gap-1 text-success">
+              <CheckIcon className="h-3 w-3" /> CPF válido
+            </p>
+          )}
         </div>
       </div>
 
@@ -243,8 +254,9 @@ export function BillingClient({
       <div className="card border-accent/40 bg-accent/5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-accent">
-              🎟️ Cupom de desconto
+            <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-accent">
+              <TicketIcon className="h-4 w-4" />
+              Cupom de desconto
             </h3>
             <p className="mt-1 text-sm text-ink-muted">
               Tem um cupom? Cole abaixo e aperte <strong>Validar</strong>.
@@ -289,7 +301,10 @@ export function BillingClient({
 
         {voucherResult?.ok && (
           <div className="mt-3 rounded-lg border border-success/40 bg-success/10 p-3 text-sm">
-            <div className="font-bold text-success">✓ Cupom válido</div>
+            <div className="flex items-center gap-2 font-bold text-success">
+              <CheckIcon className="h-4 w-4" />
+              Cupom válido
+            </div>
             {voucherResult.description && (
               <div className="mt-1 text-ink">{voucherResult.description}</div>
             )}
@@ -309,8 +324,9 @@ export function BillingClient({
           </div>
         )}
         {voucherResult?.ok === false && (
-          <div className="mt-3 rounded-lg border border-danger/40 bg-danger/10 p-3 text-sm text-danger">
-            ✗ {voucherResult.reason}
+          <div className="mt-3 flex items-center gap-2 rounded-lg border border-danger/40 bg-danger/10 p-3 text-sm text-danger">
+            <CloseIcon className="h-4 w-4 shrink-0" />
+            {voucherResult.reason}
           </div>
         )}
       </div>
@@ -368,18 +384,17 @@ export function BillingClient({
                   : "Alunos ilimitados. Para PT consolidado."}
               </p>
 
-              <ul className="mt-4 space-y-1.5 text-sm text-ink-muted">
-                <li>✓ Workout builder ilimitado</li>
-                <li>
-                  ✓{" "}
+              <ul className="mt-4 space-y-2 text-sm text-ink-muted">
+                <PlanFeature>Treinos e blocos ilimitados</PlanFeature>
+                <PlanFeature>
                   {p.studentLimit
                     ? `Até ${p.studentLimit} alunos`
                     : "Alunos ilimitados"}
-                </li>
-                <li>✓ Página pública personalizada</li>
-                <li>✓ Anamnese e captação automática</li>
-                <li>✓ App do aluno (PWA)</li>
-                <li>✓ Multi-idioma (PT/EN/ES)</li>
+                </PlanFeature>
+                <PlanFeature>Página pública personalizada</PlanFeature>
+                <PlanFeature>Anamnese e captação automática</PlanFeature>
+                <PlanFeature>App do aluno no celular</PlanFeature>
+                <PlanFeature>Cobrança Pix recorrente</PlanFeature>
               </ul>
 
               {voucher.trim() && !voucherUsed && !showVoucherPrice && (
@@ -493,7 +508,7 @@ function PixPaymentModal({
       if (cancelled) return;
       if (r.ok && r.paid) {
         setPaid(true);
-        setPollMsg("✓ Pagamento confirmado!");
+        setPollMsg("Pagamento confirmado!");
         if (intervalRef.current) clearInterval(intervalRef.current);
         setTimeout(() => onPaid(), 2000);
       }
@@ -532,13 +547,13 @@ function PixPaymentModal({
           className="absolute right-3 top-3 text-ink-dim hover:text-ink"
           aria-label="Fechar"
         >
-          ✕
+          <CloseIcon className="h-4 w-4" />
         </button>
 
         {paid ? (
           <div className="py-8 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success/20 text-4xl">
-              ✓
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success/20 text-success">
+              <CheckIcon className="h-8 w-8" />
             </div>
             <h2 className="text-xl font-bold text-success">
               Pagamento confirmado!
@@ -577,9 +592,15 @@ function PixPaymentModal({
                 <button
                   type="button"
                   onClick={handleCopy}
-                  className="btn-primary"
+                  className="btn-primary inline-flex items-center gap-1.5"
                 >
-                  {copied ? "✓ Copiado" : "Copiar"}
+                  {copied ? (
+                    <>
+                      <CheckIcon className="h-4 w-4" /> Copiado
+                    </>
+                  ) : (
+                    "Copiar"
+                  )}
                 </button>
               </div>
             </div>
@@ -647,7 +668,9 @@ function ActiveSubscriptionPanel({
         <div className="flex items-start justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-2xl">✓</span>
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-success/20 text-success">
+                <CheckIcon className="h-4 w-4" />
+              </span>
               <h2 className="text-xl font-bold text-success">
                 Assinatura ativa
               </h2>
@@ -780,6 +803,15 @@ function Stat({ label, value }: { label: string; value: string }) {
       </div>
       <div className="mt-1 text-lg font-bold">{value}</div>
     </div>
+  );
+}
+
+function PlanFeature({ children }: { children: React.ReactNode }) {
+  return (
+    <li className="flex items-start gap-2">
+      <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+      <span>{children}</span>
+    </li>
   );
 }
 

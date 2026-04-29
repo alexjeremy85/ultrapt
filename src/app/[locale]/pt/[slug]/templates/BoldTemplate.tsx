@@ -1,5 +1,7 @@
 import { Link } from "@/i18n/navigation";
 import { ensureReadableOnDark, contrastingTextColor } from "@/lib/colorContrast";
+import { WhatsappIcon, InstagramIcon } from "@/components/icons";
+import { HighlightIcon } from "@/lib/highlight-icons";
 import type { TemplateProps } from "./types";
 
 export function BoldTemplate({ trainer, ctaUrl, studentLoginSlot }: TemplateProps) {
@@ -113,7 +115,9 @@ export function BoldTemplate({ trainer, ctaUrl, studentLoginSlot }: TemplateProp
                     key={i}
                     className="flex items-start gap-3 rounded-xl border border-border bg-bg-surface p-4"
                   >
-                    {h.icon && <span className="text-2xl">{h.icon}</span>}
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-bg-elevated text-accent">
+                      <HighlightIcon name={h.icon} className="h-4 w-4" />
+                    </span>
                     <div>
                       <div className="font-semibold">{h.title}</div>
                       {h.description && (
@@ -196,15 +200,16 @@ export function BoldTemplate({ trainer, ctaUrl, studentLoginSlot }: TemplateProp
               </Link>
 
               {(trainer.whatsapp_phone || trainer.instagram_handle) && (
-                <div className="mt-4 flex justify-center gap-4 text-xs">
+                <div className="mt-4 flex justify-center gap-5 text-xs">
                   {trainer.whatsapp_phone && (
                     <a
                       href={`https://wa.me/55${trainer.whatsapp_phone}`}
                       target="_blank"
                       rel="noopener"
-                      className="text-ink-muted hover:text-ink"
+                      className="inline-flex items-center gap-1.5 text-ink-muted hover:text-ink"
                     >
-                      📱 WhatsApp
+                      <WhatsappIcon className="h-4 w-4" />
+                      WhatsApp
                     </a>
                   )}
                   {trainer.instagram_handle && (
@@ -212,9 +217,10 @@ export function BoldTemplate({ trainer, ctaUrl, studentLoginSlot }: TemplateProp
                       href={`https://instagram.com/${trainer.instagram_handle}`}
                       target="_blank"
                       rel="noopener"
-                      className="text-ink-muted hover:text-ink"
+                      className="inline-flex items-center gap-1.5 text-ink-muted hover:text-ink"
                     >
-                      📷 @{trainer.instagram_handle}
+                      <InstagramIcon className="h-4 w-4" />
+                      @{trainer.instagram_handle}
                     </a>
                   )}
                 </div>

@@ -1,5 +1,7 @@
 import { Link } from "@/i18n/navigation";
 import { ensureReadableOnDark, contrastingTextColor } from "@/lib/colorContrast";
+import { WhatsappIcon, InstagramIcon } from "@/components/icons";
+import { HighlightIcon } from "@/lib/highlight-icons";
 import type { TemplateProps } from "./types";
 
 export function EnergyTemplate({ trainer, ctaUrl, studentLoginSlot }: TemplateProps) {
@@ -159,14 +161,12 @@ export function EnergyTemplate({ trainer, ctaUrl, studentLoginSlot }: TemplatePr
                     backgroundImage: `linear-gradient(135deg, ${accent}10, transparent)`,
                   }}
                 >
-                  {h.icon && (
-                    <div
-                      className="mb-3 flex h-12 w-12 items-center justify-center rounded-lg text-2xl"
-                      style={{ background: `${accent}26`, color: accent }}
-                    >
-                      {h.icon}
-                    </div>
-                  )}
+                  <div
+                    className="mb-3 flex h-12 w-12 items-center justify-center rounded-lg"
+                    style={{ background: `${accent}26`, color: accent }}
+                  >
+                    <HighlightIcon name={h.icon} className="h-5 w-5" />
+                  </div>
                   <div className="text-lg font-bold">{h.title}</div>
                   {h.description && (
                     <div className="mt-1 text-sm text-white/70">
@@ -270,9 +270,10 @@ export function EnergyTemplate({ trainer, ctaUrl, studentLoginSlot }: TemplatePr
                   href={`https://wa.me/55${trainer.whatsapp_phone}`}
                   target="_blank"
                   rel="noopener"
-                  className="text-white/60 hover:text-white"
+                  className="inline-flex items-center gap-2 text-white/60 hover:text-white"
                 >
-                  📱 WhatsApp
+                  <WhatsappIcon className="h-4 w-4" />
+                  WhatsApp
                 </a>
               )}
               {trainer.instagram_handle && (
@@ -280,9 +281,10 @@ export function EnergyTemplate({ trainer, ctaUrl, studentLoginSlot }: TemplatePr
                   href={`https://instagram.com/${trainer.instagram_handle}`}
                   target="_blank"
                   rel="noopener"
-                  className="text-white/60 hover:text-white"
+                  className="inline-flex items-center gap-2 text-white/60 hover:text-white"
                 >
-                  📷 @{trainer.instagram_handle}
+                  <InstagramIcon className="h-4 w-4" />
+                  @{trainer.instagram_handle}
                 </a>
               )}
             </div>

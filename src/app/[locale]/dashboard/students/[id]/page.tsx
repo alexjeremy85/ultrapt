@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSiteUrl } from "@/lib/site-url";
+import { ChatIcon } from "@/components/icons";
 import { AssignWorkoutForm } from "./AssignWorkoutForm";
 
 export default async function StudentDetailPage({
@@ -89,9 +90,10 @@ export default async function StudentDetailPage({
           </div>
           <Link
             href={`/dashboard/students/${student.id}/chat`}
-            className="btn-secondary text-sm shrink-0"
+            className="btn-secondary inline-flex shrink-0 items-center gap-1.5 text-sm"
           >
-            💬 Conversar
+            <ChatIcon className="h-4 w-4" />
+            Conversar
           </Link>
         </div>
       </div>

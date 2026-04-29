@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { HIGHLIGHT_ICONS, HighlightIcon } from "@/lib/highlight-icons";
 
 type Highlight = {
   icon?: string;
@@ -8,14 +9,12 @@ type Highlight = {
   description?: string;
 };
 
-const ICON_OPTIONS = ["💪", "🏋️", "🥇", "🎯", "📋", "📈", "🤝", "📱", "🍎", "❤️", "🧠", "⏱️"];
-
 export function HighlightsEditor({ initial }: { initial: Highlight[] }) {
   const [items, setItems] = useState<Highlight[]>(initial);
 
   const add = () => {
     if (items.length >= 6) return;
-    setItems([...items, { icon: "💪", title: "", description: "" }]);
+    setItems([...items, { icon: "dumbbell", title: "", description: "" }]);
   };
 
   const remove = (idx: number) => setItems(items.filter((_, i) => i !== idx));
@@ -56,19 +55,22 @@ export function HighlightsEditor({ initial }: { initial: Highlight[] }) {
             </button>
           </div>
 
-          <div className="mt-2 flex items-center gap-2">
-            <span className="text-xs text-ink-dim">Ícone:</span>
-            <div className="flex flex-wrap gap-1">
-              {ICON_OPTIONS.map((icon) => (
+          <div className="mt-3">
+            <span className="text-xs text-ink-dim">Ícone</span>
+            <div className="mt-1.5 grid grid-cols-6 gap-1.5 sm:grid-cols-12">
+              {HIGHLIGHT_ICONS.map(({ name, label }) => (
                 <button
-                  key={icon}
+                  key={name}
                   type="button"
-                  onClick={() => update(idx, "icon", icon)}
-                  className={`flex h-8 w-8 items-center justify-center rounded text-lg ${
-                    it.icon === icon ? "bg-accent/20" : "hover:bg-bg-elevated"
+                  onClick={() => update(idx, "icon", name)}
+                  title={label}
+                  className={`flex h-9 w-9 items-center justify-center rounded-lg border transition ${
+                    it.icon === name
+                      ? "border-accent bg-accent/15 text-accent"
+                      : "border-border bg-bg-card text-ink-muted hover:border-border-strong hover:text-ink"
                   }`}
                 >
-                  {icon}
+                  <HighlightIcon name={name} className="h-4 w-4" />
                 </button>
               ))}
             </div>
@@ -78,7 +80,7 @@ export function HighlightsEditor({ initial }: { initial: Highlight[] }) {
             placeholder="Título (ex.: Treino renovado a cada 4 semanas)"
             value={it.title}
             onChange={(e) => update(idx, "title", e.target.value)}
-            className="input mt-2"
+            className="input mt-3"
           />
           <input
             placeholder="Descrição opcional (ex.: Periodização científica)"

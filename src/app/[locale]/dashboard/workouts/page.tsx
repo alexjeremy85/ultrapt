@@ -1,6 +1,7 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { DumbbellIcon } from "@/components/icons";
 
 export default async function WorkoutsPage({
   params,
@@ -38,7 +39,9 @@ export default async function WorkoutsPage({
 
       {!workouts || workouts.length === 0 ? (
         <div className="card text-center py-16">
-          <div className="mb-3 text-4xl">💪</div>
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-accent/10 text-accent">
+            <DumbbellIcon className="h-7 w-7" />
+          </div>
           <h2 className="text-lg font-semibold">
             {t("Workouts.empty_title")}
           </h2>

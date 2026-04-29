@@ -1,4 +1,5 @@
 import { Link } from "@/i18n/navigation";
+import { Logomark } from "@/components/icons";
 
 export default function AuthLayout({
   children,
@@ -17,9 +18,7 @@ export default function AuthLayout({
           href="/"
           className="mb-8 flex items-center justify-center gap-2 text-xl font-bold"
         >
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-hype text-black">
-            ⚡
-          </span>
+          <Logomark />
           Ultra PT
         </Link>
         <div className="rounded-2xl border border-border bg-bg-card p-8 shadow-2xl">
