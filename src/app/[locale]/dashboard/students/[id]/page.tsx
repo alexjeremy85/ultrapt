@@ -32,7 +32,7 @@ export default async function StudentDetailPage({
   const { data: student, error: studentError } = await supabase
     .from("students")
     .select(
-      "id, full_name, email, phone, photo_url, objective, experience_level, access_code"
+      "id, full_name, email, phone, photo_url, objective, experience_level, access_code, status, anamnesis_submitted_at"
     )
     .eq("id", id)
     .eq("trainer_id", user.id)
@@ -95,7 +95,18 @@ export default async function StudentDetailPage({
     });
   }
 
-  const studentLink = `${getSiteUrl()}/aluno/${student.access_code}`;
+  const { data: trainer } = await supabase
+    .from("trainers")
+    .select("slug")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const siteUrl = getSiteUrl();
+  const studentLink = `${siteUrl}/aluno/${student.access_code}`;
+  const anamnesisLink = trainer?.slug
+    ? `${siteUrl}/pt/${trainer.slug}/anamnese`
+    : null;
+  const hasAnamnesis = Boolean(student.anamnesis_submitted_at);
 
   const assignments = (assignmentsRaw ?? []) as unknown as Array<{
     id: string;
@@ -158,49 +169,53 @@ export default async function StudentDetailPage({
       </div>
 
       <div className="card">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-dim">
-          Acesso do aluno
-        </h2>
-        <p className="mt-2 text-sm text-ink-muted">
-          Mande este link pelo WhatsApp.{" "}
-          <strong className="text-ink">
-            Seu aluno abre direto no celular, sem precisar criar conta nem
-            senha.
-          </strong>
-        </p>
-
-        <div className="mt-4 space-y-3">
+        <div className="flex items-start justify-between gap-3">
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-widest text-ink-dim">
-              Código de acesso
-            </div>
-            <code className="mt-1 inline-block rounded-lg bg-bg-surface px-3 py-2 font-mono text-base font-bold text-accent">
-              {student.access_code}
-            </code>
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-dim">
+              Links pra mandar pro aluno
+            </h2>
+            <p className="mt-2 text-sm text-ink-muted">
+              Dois links diferentes. Mande o que fizer sentido pelo WhatsApp.
+            </p>
           </div>
+          <StudentStatusBadge status={student.status} hasAnamnesis={hasAnamnesis} />
+        </div>
 
-          <div>
-            <div className="text-[10px] font-bold uppercase tracking-widest text-ink-dim">
-              Link do aluno
+        <div className="mt-5 space-y-5">
+          {/* Link 1: App do aluno */}
+          <LinkBlock
+            title="Link do app de treino"
+            description="Abre o app do aluno: ele vê os treinos atribuídos, executa, conversa com você."
+            link={studentLink}
+            phone={student.phone ?? null}
+            studentName={student.full_name}
+            whatsAppText={`Oi ${student.full_name}, aqui está o link do seu app de treino: ${studentLink}`}
+          />
+
+          {/* Link 2: Anamnese (só se PT tem slug e aluno ainda não preencheu) */}
+          {anamnesisLink && !hasAnamnesis && (
+            <LinkBlock
+              title="Link da anamnese"
+              description="Pra você conhecer o histórico, lesões, objetivos. O aluno preenche uma vez."
+              link={anamnesisLink}
+              phone={student.phone ?? null}
+              studentName={student.full_name}
+              whatsAppText={`Oi ${student.full_name}, antes do primeiro treino preciso que você preencha esse formulário: ${anamnesisLink}`}
+              variant="anamnesis"
+            />
+          )}
+
+          {hasAnamnesis && (
+            <div className="rounded-lg border border-success/30 bg-success/5 px-3 py-2 text-xs text-ink-muted">
+              <strong className="text-success">✓ Anamnese preenchida.</strong>{" "}
+              Você já tem o histórico dele. Não precisa mandar o link da anamnese.
             </div>
-            <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center">
-              <code className="flex-1 truncate rounded-lg bg-bg-surface px-3 py-2 text-xs text-accent">
-                {studentLink}
-              </code>
-              <div className="flex shrink-0 gap-2">
-                <CopyLinkButton link={studentLink} />
-                {student.phone && (
-                  <a
-                    href={`https://wa.me/55${student.phone}?text=${encodeURIComponent(`Oi ${student.full_name}, aqui está o link do seu app de treino: ${studentLink}`)}`}
-                    target="_blank"
-                    rel="noopener"
-                    className="btn-secondary text-sm"
-                  >
-                    Enviar WhatsApp
-                  </a>
-                )}
-              </div>
-            </div>
+          )}
+
+          <div className="border-t border-border pt-3 text-xs text-ink-dim">
+            <strong className="text-ink-muted">Código de acesso:</strong>{" "}
+            <code className="font-mono text-accent">{student.access_code}</code>
+            <span className="ml-2">— se ele perder o link, o código serve pra entrar pela página pública.</span>
           </div>
         </div>
       </div>
@@ -255,6 +270,83 @@ export default async function StudentDetailPage({
         </div>
       </div>
     </div>
+  );
+}
+
+function LinkBlock({
+  title,
+  description,
+  link,
+  phone,
+  studentName,
+  whatsAppText,
+  variant,
+}: {
+  title: string;
+  description: string;
+  link: string;
+  phone: string | null;
+  studentName: string;
+  whatsAppText: string;
+  variant?: "anamnesis";
+}) {
+  void studentName;
+  const accentClass =
+    variant === "anamnesis"
+      ? "border-warning/30 bg-warning/5"
+      : "border-accent/30 bg-accent/5";
+
+  return (
+    <div className={`rounded-xl border p-4 ${accentClass}`}>
+      <div className="text-sm font-semibold">{title}</div>
+      <p className="mt-1 text-xs text-ink-muted">{description}</p>
+      <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+        <code className="flex-1 truncate rounded-lg bg-bg-surface px-3 py-2 text-xs text-accent">
+          {link}
+        </code>
+        <div className="flex shrink-0 gap-2">
+          <CopyLinkButton link={link} />
+          {phone && (
+            <a
+              href={`https://wa.me/55${phone}?text=${encodeURIComponent(whatsAppText)}`}
+              target="_blank"
+              rel="noopener"
+              className="btn-secondary text-sm"
+            >
+              Enviar WhatsApp
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StudentStatusBadge({
+  status,
+  hasAnamnesis,
+}: {
+  status: string | null | undefined;
+  hasAnamnesis: boolean;
+}) {
+  let label = "Ativo";
+  let className = "bg-success/15 text-success";
+  if (status === "pending") {
+    label = hasAnamnesis ? "Lead novo" : "Aguardando anamnese";
+    className = "bg-accent/15 text-accent";
+  } else if (status === "paused") {
+    label = "Pausado";
+    className = "bg-warning/15 text-warning";
+  } else if (status === "inactive" || status === "canceled") {
+    label = "Inativo";
+    className = "bg-bg-elevated text-ink-dim";
+  }
+  return (
+    <span
+      className={`inline-block whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium ${className}`}
+    >
+      {label}
+    </span>
   );
 }
 
