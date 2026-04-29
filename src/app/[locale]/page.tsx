@@ -83,24 +83,22 @@ function Hero({
   return (
     <section className="relative mt-20 grid grid-cols-1 gap-16 lg:mt-28 lg:grid-cols-[1.1fr_1fr] lg:items-center">
       <div>
-        <div className="inline-flex items-center gap-2 rounded-full border border-border bg-bg-surface px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-ink-muted">
-          <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-          Plataforma white-label para personal trainers
+        <div className="inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
+          Para personais que querem escalar
         </div>
 
         <h1 className="mt-7 text-5xl font-black leading-[1.02] tracking-tight md:text-[64px]">
-          O aluno entra no app{" "}
+          Trate seus alunos como{" "}
           <span className="bg-gradient-hype bg-clip-text text-transparent">
-            do João
+            clientes premium.
           </span>
-          , não no nosso.
         </h1>
 
         <p className="mt-6 max-w-xl text-lg leading-relaxed text-ink-muted">
-          Capte alunos no Instagram, prescreva treinos em minutos e receba
-          no <strong className="text-ink">Pix automático todo mês</strong>.
-          Sem WhatsApp lotado de cobrança, sem planilha bagunçada — e tudo
-          dentro da sua marca.
+          Capte alunos, faça anamneses, prescreva treinos e cobre
+          mensalidades automaticamente.{" "}
+          <strong className="text-ink">Tudo num só lugar.</strong>
         </p>
 
         <div className="mt-9 flex flex-wrap gap-3">
@@ -235,8 +233,8 @@ function WhiteLabelSection() {
       <div className="mx-auto max-w-2xl text-center">
         <SectionEyebrow>Sua marca, sempre</SectionEyebrow>
         <h2 className="mt-4 text-4xl font-black tracking-tight md:text-5xl">
-          O aluno conhece <em className="not-italic text-accent">você</em>,
-          não uma plataforma.
+          O aluno entra no app{" "}
+          <span className="text-accent">do João</span>, não no nosso.
         </h2>
         <p className="mt-5 text-lg text-ink-muted">
           Uma URL com seu nome, sua foto, sua cidade, suas especialidades.
