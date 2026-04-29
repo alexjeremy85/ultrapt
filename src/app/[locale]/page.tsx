@@ -1,5 +1,6 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { PLANS, type PlanId } from "@/lib/plans";
 
 export default async function HomePage({
   params,
@@ -32,6 +33,8 @@ export default async function HomePage({
         <BeforeAfter />
 
         <FeaturesGrid />
+
+        <Pricing />
 
         <FinalCta ctaSignup={t("Landing.cta_signup")} />
 
@@ -95,7 +98,12 @@ function Hero({
           </span>
         </h1>
 
-        <p className="mt-6 max-w-xl text-lg leading-relaxed text-ink-muted">
+        <p className="mt-4 max-w-xl text-xl font-semibold leading-snug text-ink">
+          Eles entram no app{" "}
+          <span className="text-accent">do João</span>, não no nosso.
+        </p>
+
+        <p className="mt-5 max-w-xl text-lg leading-relaxed text-ink-muted">
           Capte alunos, faça anamneses, prescreva treinos e cobre
           mensalidades automaticamente.{" "}
           <strong className="text-ink">Tudo num só lugar.</strong>
@@ -233,8 +241,8 @@ function WhiteLabelSection() {
       <div className="mx-auto max-w-2xl text-center">
         <SectionEyebrow>Sua marca, sempre</SectionEyebrow>
         <h2 className="mt-4 text-4xl font-black tracking-tight md:text-5xl">
-          O aluno entra no app{" "}
-          <span className="text-accent">do João</span>, não no nosso.
+          O aluno conhece <em className="not-italic text-accent">você</em>,
+          não a plataforma.
         </h2>
         <p className="mt-5 text-lg text-ink-muted">
           Uma URL com seu nome, sua foto, sua cidade, suas especialidades.
@@ -442,6 +450,106 @@ function CheckLine({ children }: { children: React.ReactNode }) {
   );
 }
 
+function Pricing() {
+  const order: PlanId[] = ["starter", "pro", "scale"];
+  const descriptions: Record<PlanId, string> = {
+    starter: "Pra quem está começando.",
+    pro: "Pra PT em crescimento.",
+    scale: "Pra PT consolidado.",
+  };
+
+  return (
+    <section id="pricing" className="mt-32 lg:mt-40">
+      <div className="mx-auto max-w-2xl text-center">
+        <SectionEyebrow>Preço transparente</SectionEyebrow>
+        <h2 className="mt-4 text-4xl font-black tracking-tight md:text-5xl">
+          Um plano que cabe no seu mês.
+        </h2>
+        <p className="mt-5 text-lg text-ink-muted">
+          14 dias grátis sem cartão. Você só paga se quiser continuar.
+          Cancela quando quiser.
+        </p>
+      </div>
+
+      <div className="mt-14 grid grid-cols-1 gap-4 md:grid-cols-3">
+        {order.map((id) => {
+          const p = PLANS[id];
+          const isPro = id === "pro";
+          return (
+            <div
+              key={id}
+              className={`relative rounded-2xl border p-6 ${
+                isPro
+                  ? "border-accent bg-bg-card shadow-glow-sm"
+                  : "border-border bg-bg-card"
+              }`}
+            >
+              {isPro && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-hype px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-black">
+                  Mais escolhido
+                </div>
+              )}
+
+              <div className="text-xs font-bold uppercase tracking-[0.2em] text-ink-dim">
+                {p.name}
+              </div>
+
+              <div className="mt-4 flex items-baseline gap-1">
+                <span className="text-4xl font-black">R$ {p.price}</span>
+                <span className="text-sm text-ink-dim">/ mês</span>
+              </div>
+
+              <p className="mt-2 text-sm text-ink-muted">
+                {descriptions[id]}
+              </p>
+
+              <ul className="mt-5 space-y-2 text-sm text-ink-muted">
+                <li className="flex items-start gap-2">
+                  <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                  <span>
+                    {p.studentLimit
+                      ? `Até ${p.studentLimit} alunos`
+                      : "Alunos ilimitados"}
+                  </span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                  <span>Página pública personalizada</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                  <span>Anamnese, treinos e chat</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                  <span>Cobrança Pix automática</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                  <span>Sem taxa de setup</span>
+                </li>
+              </ul>
+
+              <Link
+                href="/signup"
+                className={`mt-6 block w-full text-center ${
+                  isPro ? "btn-primary" : "btn-secondary"
+                }`}
+              >
+                Começar grátis
+              </Link>
+            </div>
+          );
+        })}
+      </div>
+
+      <p className="mt-6 text-center text-sm text-ink-dim">
+        Pix mensal recorrente · Sem fidelidade · Cancela a qualquer momento
+      </p>
+    </section>
+  );
+}
+
 function FinalCta({ ctaSignup }: { ctaSignup: string }) {
   return (
     <section className="mt-32 lg:mt-40">
@@ -451,7 +559,12 @@ function FinalCta({ ctaSignup }: { ctaSignup: string }) {
           <div className="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-accent/20 blur-3xl" />
         </div>
         <div className="relative">
-          <h2 className="text-3xl font-black tracking-tight md:text-5xl">
+          <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+            <StarIcon className="h-3.5 w-3.5" />
+            Fundador · primeiros 50 PTs com preço vitalício
+          </div>
+
+          <h2 className="mt-6 text-3xl font-black tracking-tight md:text-5xl">
             Pronto pra ter sua{" "}
             <span className="bg-gradient-hype bg-clip-text text-transparent">
               página de personal
@@ -459,7 +572,8 @@ function FinalCta({ ctaSignup }: { ctaSignup: string }) {
             ?
           </h2>
           <p className="mt-5 text-lg text-ink-muted">
-            14 dias grátis. Sem cartão. Você só paga se quiser continuar.
+            Entre cedo, garanta o preço de fundador pra sempre. 14 dias
+            grátis, sem cartão.
           </p>
           <div className="mt-8 flex justify-center">
             <Link
@@ -840,6 +954,19 @@ function ChartIcon({ className }: IconProps) {
     >
       <path d="M3 3v18h18" />
       <path d="M7 14l4-4 3 3 5-6" />
+    </svg>
+  );
+}
+
+function StarIcon({ className }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={className}
+      aria-hidden
+    >
+      <path d="M12 2.5l3.09 6.26 6.91 1-5 4.87 1.18 6.87L12 18.27l-6.18 3.23L7 14.63 2 9.76l6.91-1L12 2.5z" />
     </svg>
   );
 }
