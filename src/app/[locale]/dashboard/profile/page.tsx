@@ -1,6 +1,7 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getSiteUrl } from "@/lib/site-url";
 import { ProfileForm } from "./ProfileForm";
 
 const FULL_COLS = "*";
@@ -73,7 +74,7 @@ export default async function ProfilePage({
     );
   }
 
-  const publicUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/pt/${trainer.slug}`;
+  const publicUrl = `${getSiteUrl()}/pt/${trainer.slug}`;
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">

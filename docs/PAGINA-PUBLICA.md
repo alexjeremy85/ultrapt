@@ -19,10 +19,8 @@ A **página pública** resolve isso colocando **toda a sua oferta + captação n
 ## A URL e onde ela mora
 
 ```
-https://ultrapt.vercel.app/pt/SEU-SLUG
+https://ultrapt.com.br/pt/SEU-SLUG
 ```
-
-> Quando você comprar um domínio próprio (ex.: `ultrapt.com.br`), a URL vira `https://ultrapt.com.br/pt/seu-slug` automaticamente.
 
 **Slug** é a parte final, derivada do seu nome. Você pode editar para algo mais memorável:
 

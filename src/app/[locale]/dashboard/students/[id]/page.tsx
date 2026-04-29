@@ -2,6 +2,7 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getSiteUrl } from "@/lib/site-url";
 import { AssignWorkoutForm } from "./AssignWorkoutForm";
 
 export default async function StudentDetailPage({
@@ -35,7 +36,7 @@ export default async function StudentDetailPage({
     .eq("trainer_id", user!.id)
     .order("created_at", { ascending: false });
 
-  const studentLink = `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/aluno/${student.access_code}`;
+  const studentLink = `${getSiteUrl()}/aluno/${student.access_code}`;
 
   const assignments = (student.workout_assignments ?? []) as Array<{
     id: string;

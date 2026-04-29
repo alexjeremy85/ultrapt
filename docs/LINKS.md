@@ -34,7 +34,7 @@ https://seudominio.com/pt/[seu-slug]
 
 Exemplo:
 ```
-https://ultrapt.vercel.app/pt/alex-guimaraes-dos-santos
+https://ultrapt.com.br/pt/alex-guimaraes-dos-santos
 ```
 
 ### Onde divulgar
@@ -119,7 +119,7 @@ https://seudominio.com/aluno/[code-unico-de-32-caracteres]
 
 Exemplo:
 ```
-https://ultrapt.vercel.app/aluno/a1b2c3d4e5f6...
+https://ultrapt.com.br/aluno/a1b2c3d4e5f6...
 ```
 
 ### Como obter

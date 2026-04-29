@@ -1,6 +1,7 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getSiteUrl } from "@/lib/site-url";
 
 export default async function DashboardPage({
   params,
@@ -48,7 +49,7 @@ export default async function DashboardPage({
         .eq("trainer_id", user!.id),
     ]);
 
-  const publicUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/pt/${trainer.slug}`;
+  const publicUrl = `${getSiteUrl()}/pt/${trainer.slug}`;
 
   return (
     <div className="space-y-6">

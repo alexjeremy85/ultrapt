@@ -41,8 +41,8 @@ Depois disso, **redeploy** para aplicar as variáveis.
 1. No painel Asaas (produção), vá em **Configurações → Integrações → Webhooks**
 2. **Novo Webhook**:
    - **Nome:** Pagamento Ultra PT
-   - **URL:** `https://project-pwzai.vercel.app/api/webhooks/asaas`
-     - (ou seu domínio próprio se já tiver)
+   - **URL:** `https://ultrapt.com.br/api/webhooks/asaas`
+     - (enquanto o DNS não propagou, use temporariamente a URL Vercel — depois atualize aqui)
    - **Versão da API:** v3
    - **Token de autenticação:** gere um novo token aleatório (`openssl rand -hex 32`) e use o MESMO valor em:
      - **Asaas** → campo "Token de autenticação" deste webhook
@@ -63,7 +63,7 @@ Depois disso, **redeploy** para aplicar as variáveis.
 
 ## 4. Garantir que produção tem a versão atualizada
 
-A URL de produção (`project-pwzai.vercel.app`) deploya da branch `main`. Se você desenvolveu em `dev`, faça merge:
+A URL de produção (`ultrapt.com.br`) deploya da branch `main`. Se você desenvolveu em `dev`, faça merge:
 
 ```bash
 git checkout main
@@ -95,16 +95,16 @@ Como verificar: SQL Editor → `select count(*) from public.exercises;` deve ret
 
 ---
 
-## 6. Domínio próprio (recomendado)
+## 6. Domínio próprio
 
-URL atual `project-pwzai.vercel.app` é longa e quebra confiança.
+Domínio canônico: **`ultrapt.com.br`**.
 
-1. Compre `ultrapt.com.br` ou similar (registro.br ~R$40/ano)
-2. Vercel: **Project → Settings → Domains → Add**
-3. Configure os DNS records que a Vercel mostrar (CNAME ou A)
-4. Aguarde propagação (~10 min a 2h)
-5. Atualize na Vercel a variável `NEXT_PUBLIC_APP_URL` para o novo domínio
-6. Atualize a URL do webhook no Asaas
+1. Vercel: **Project → Settings → Domains → Add → `ultrapt.com.br`** (e `www.ultrapt.com.br`)
+2. Configure os DNS records que a Vercel mostrar (CNAME ou A) no registro.br
+3. Aguarde propagação (~10 min a 2h)
+4. **Atualize na Vercel a env var `NEXT_PUBLIC_APP_URL=https://ultrapt.com.br`** (Production + Preview)
+5. Atualize a URL do webhook no Asaas para `https://ultrapt.com.br/api/webhooks/asaas`
+6. Redeploy
 
 ---
 
