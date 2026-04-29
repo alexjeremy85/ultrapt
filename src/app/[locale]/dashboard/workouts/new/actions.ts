@@ -43,12 +43,35 @@ export async function createWorkout(formData: FormData) {
     .single();
 
   if (error) {
+    console.error("[workouts-create] insert failed", {
+      trainerId: user!.id,
+      name,
+      code: error.code,
+      message: error.message,
+      details: error.details,
+    });
     redirect({
       href: `/dashboard/workouts/new?error=${encodeURIComponent(error.message)}`,
       locale,
     });
   }
 
+  const workoutId = data?.id;
+  if (!workoutId) {
+    console.error("[workouts-create] insert returned no id", {
+      trainerId: user!.id,
+    });
+    redirect({
+      href: `/dashboard/workouts/new?error=${encodeURIComponent("Falha ao criar treino")}`,
+      locale,
+    });
+  }
+
+  console.log("[workouts-create] success", {
+    trainerId: user!.id,
+    workoutId,
+  });
+
   revalidatePath("/[locale]/dashboard", "layout");
-  redirect({ href: `/dashboard/workouts/${data!.id}`, locale });
+  redirect({ href: `/dashboard/workouts/${workoutId}`, locale });
 }

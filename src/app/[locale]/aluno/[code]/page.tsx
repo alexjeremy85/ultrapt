@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ChatIcon, ClockIcon, ArrowRightIcon } from "@/components/icons";
+import { FirstVisitWelcome } from "./FirstVisitWelcome";
 
 export default async function StudentHomePage({
   params,
@@ -15,7 +16,7 @@ export default async function StudentHomePage({
 
   const supabase = createAdminClient();
 
-  const { data: student } = await supabase
+  const { data: student, error: studentErr } = await supabase
     .from("students")
     .select(
       "id, full_name, photo_url, trainer:trainers(full_name, photo_url, slug, whatsapp_phone)"
@@ -23,9 +24,20 @@ export default async function StudentHomePage({
     .eq("access_code", code)
     .maybeSingle();
 
-  if (!student) notFound();
+  if (studentErr) {
+    console.error("[aluno-home] student lookup failed", {
+      code,
+      errCode: studentErr.code,
+      message: studentErr.message,
+    });
+  }
 
-  const { data: assignments } = await supabase
+  if (!student) {
+    console.warn("[aluno-home] no student for code", { code });
+    notFound();
+  }
+
+  const { data: assignments, error: assignErr } = await supabase
     .from("workout_assignments")
     .select(
       "id, start_date, is_active, workout:workouts(id, name, goal, level, duration_weeks, workout_blocks(id, position, name, notes, workout_exercises(count)))"
@@ -33,6 +45,14 @@ export default async function StudentHomePage({
     .eq("student_id", student.id)
     .eq("is_active", true)
     .order("created_at", { ascending: false });
+
+  if (assignErr) {
+    console.error("[aluno-home] assignments lookup failed", {
+      studentId: student.id,
+      errCode: assignErr.code,
+      message: assignErr.message,
+    });
+  }
 
   const trainer = student.trainer as unknown as {
     full_name: string;
@@ -90,6 +110,12 @@ export default async function StudentHomePage({
       </header>
 
       <div className="mx-auto max-w-2xl px-5 py-6">
+        <FirstVisitWelcome
+          studentCode={code}
+          studentName={student.full_name.split(" ")[0]}
+          trainerName={trainer.full_name}
+        />
+
         <div className="flex items-center gap-3">
           <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full bg-bg-elevated">
             {student.photo_url ? (
