@@ -17,9 +17,11 @@ import {
   getPaymentStatus,
   refreshPixQr,
   cancelSubscription,
+  applyPartnerVoucher,
   type VoucherCheckResult,
   type StartSubscriptionResult,
   type SubscriptionDetails,
+  type PartnerVoucherResult,
 } from "./actions";
 
 function maskCpf(value: string): string {
@@ -77,7 +79,27 @@ export function BillingClient({
   const [voucherSelectedPlan, setVoucherSelectedPlan] = useState<PlanId>("pro");
   const [voucherResult, setVoucherResult] = useState<VoucherCheckResult | null>(null);
   const [validating, setValidating] = useState(false);
+  const [partnerCode, setPartnerCode] = useState("");
+  const [partnerResult, setPartnerResult] = useState<PartnerVoucherResult | null>(null);
+  const [partnerSubmitting, setPartnerSubmitting] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  async function onApplyPartnerVoucher() {
+    const code = partnerCode.trim().toUpperCase();
+    if (!code) return;
+    setPartnerSubmitting(true);
+    setPartnerResult(null);
+    try {
+      const r = await applyPartnerVoucher(code);
+      setPartnerResult(r);
+      if (r.ok) {
+        // Recarrega dados do trainer (trial_ends_at atualizado)
+        router.refresh();
+      }
+    } finally {
+      setPartnerSubmitting(false);
+    }
+  }
   const [submittingPlan, setSubmittingPlan] = useState<PlanId | null>(null);
   const [pixData, setPixData] = useState<PixData | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -331,6 +353,69 @@ export function BillingClient({
           </div>
         )}
       </div>
+
+      {/* Cupom de parceiro: estende trial. So aparece durante o trial e
+          se o trainer ainda nao usou nenhum cupom. */}
+      {status === "trialing" && !voucherUsed && (
+        <div className="card border-warning/40 bg-warning/5">
+          <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-warning">
+            <TicketIcon className="h-4 w-4" />
+            Código de parceiro
+          </h3>
+          <p className="mt-1 text-sm text-ink-muted">
+            Recebeu um código exclusivo? Ele estende seu trial. Sem cobrança.
+          </p>
+
+          <div className="mt-3 flex flex-wrap items-end gap-2">
+            <div className="flex-1 min-w-[200px]">
+              <label className="label">Código de parceiro</label>
+              <input
+                type="text"
+                value={partnerCode}
+                onChange={(e) => {
+                  setPartnerCode(e.target.value.toUpperCase());
+                  setPartnerResult(null);
+                }}
+                placeholder="Ex.: PARCEIRO90"
+                className="input uppercase"
+                autoComplete="off"
+                spellCheck={false}
+                autoCorrect="off"
+                autoCapitalize="characters"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={onApplyPartnerVoucher}
+              disabled={!partnerCode.trim() || partnerSubmitting}
+              className="btn-secondary"
+            >
+              {partnerSubmitting ? "Aplicando..." : "Aplicar"}
+            </button>
+          </div>
+
+          {partnerResult?.ok && (
+            <div className="mt-3 rounded-lg border border-success/40 bg-success/10 p-3 text-sm">
+              <div className="flex items-center gap-2 font-bold text-success">
+                <CheckIcon className="h-4 w-4" />
+                Cupom aplicado
+              </div>
+              <div className="mt-1 text-ink">
+                Seu trial foi estendido em{" "}
+                <strong>{partnerResult.daysExtended} dias</strong>. Novo
+                vencimento:{" "}
+                <strong>{formatDateBr(partnerResult.newTrialEndsAt)}</strong>.
+              </div>
+            </div>
+          )}
+          {partnerResult?.ok === false && (
+            <div className="mt-3 flex items-center gap-2 rounded-lg border border-danger/40 bg-danger/10 p-3 text-sm text-danger">
+              <CloseIcon className="h-4 w-4 shrink-0" />
+              {partnerResult.reason}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {(Object.keys(PLANS) as PlanId[]).map((planId) => {

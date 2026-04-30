@@ -13,6 +13,8 @@ import {
 import { logout } from "../(auth)/login/actions";
 import { SidebarLink } from "./SidebarLink";
 import { TrialBanner } from "./TrialBanner";
+import { MobileTopBar } from "./MobileTopBar";
+import { MobileBottomNav } from "./MobileBottomNav";
 
 export default async function DashboardLayout({
   children,
@@ -119,12 +121,19 @@ export default async function DashboardLayout({
       </aside>
 
       <div className="flex flex-1 flex-col">
+        <MobileTopBar
+          fullName={trainer?.full_name ?? null}
+          photoUrl={trainer?.photo_url ?? null}
+        />
         <TrialBanner
           status={trainer?.subscription_status ?? null}
           trialEndsAt={trainer?.trial_ends_at ?? null}
         />
-        <main className="flex-1 p-6 md:p-8">{children}</main>
+        {/* pb-24 mobile: espaco pra MobileBottomNav (~64px + safe-area).
+            md:pb-0 desktop: sem nav fixa no rodape. */}
+        <main className="flex-1 p-4 pb-24 md:p-8 md:pb-8">{children}</main>
       </div>
+      <MobileBottomNav />
     </div>
   );
 }
