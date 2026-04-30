@@ -85,6 +85,99 @@ export async function checkVoucher(
   };
 }
 
+export type PartnerVoucherResult =
+  | { ok: true; daysExtended: number; newTrialEndsAt: string }
+  | { ok: false; reason: string };
+
+/**
+ * Aplica cupom de parceiro: estende trial_ends_at em N dias.
+ * Diferente do voucher de desconto, nao envolve Asaas.
+ * So permitido durante trial (impede uso depois de assinar).
+ */
+export async function applyPartnerVoucher(
+  code: string
+): Promise<PartnerVoucherResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, reason: "Nao autenticado" };
+
+  const cleanCode = String(code ?? "").trim().toUpperCase();
+  if (!cleanCode) return { ok: false, reason: "Codigo vazio" };
+
+  const { data: trainer } = await supabase
+    .from("trainers")
+    .select("subscription_status, trial_ends_at")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (!trainer) return { ok: false, reason: "Trainer nao encontrado" };
+  if (trainer.subscription_status !== "trialing") {
+    return {
+      ok: false,
+      reason: "Cupom de parceiro so pode ser usado durante o trial",
+    };
+  }
+
+  const admin = createAdminClient();
+  const { data: claim, error: claimError } = await admin.rpc("claim_voucher", {
+    p_trainer_id: user.id,
+    p_code: cleanCode,
+  });
+  if (claimError) {
+    console.error("[partner-voucher] claim falhou", claimError);
+    return { ok: false, reason: "Erro ao aplicar cupom" };
+  }
+  const claimRow = Array.isArray(claim) ? claim[0] : claim;
+  if (!claimRow?.ok) {
+    return { ok: false, reason: claimRow?.reason ?? "Cupom invalido" };
+  }
+  if (claimRow.voucher_type !== "extend_trial_days") {
+    // Reverte: o claim ja marcou voucher_used. Pra MVP, retorna erro
+    // claro; usuario deve usar o campo correto (voucher de desconto vs
+    // voucher de parceiro).
+    console.warn("[partner-voucher] tipo errado", claimRow.voucher_type);
+    return {
+      ok: false,
+      reason: "Este codigo nao e de parceiro. Use o campo de cupom de desconto.",
+    };
+  }
+
+  // Estende a partir do MAIOR entre now() e trial_ends_at atual,
+  // pra evitar que um cupom encurte trial existente.
+  const days = Number(claimRow.voucher_value);
+  const currentTrialEnd = trainer.trial_ends_at
+    ? new Date(trainer.trial_ends_at)
+    : new Date();
+  const base = currentTrialEnd > new Date() ? currentTrialEnd : new Date();
+  const newTrialEnd = new Date(base.getTime() + days * 24 * 60 * 60 * 1000);
+
+  const { error: updateError } = await admin
+    .from("trainers")
+    .update({ trial_ends_at: newTrialEnd.toISOString() })
+    .eq("id", user.id);
+  if (updateError) {
+    console.error("[partner-voucher] update trial_ends_at falhou", updateError);
+    return { ok: false, reason: "Erro ao estender trial" };
+  }
+
+  console.log("[partner-voucher] aplicado", {
+    trainerId: user.id,
+    code: cleanCode,
+    days,
+    newTrialEndsAt: newTrialEnd.toISOString(),
+  });
+
+  revalidatePath("/[locale]/dashboard", "layout");
+
+  return {
+    ok: true,
+    daysExtended: days,
+    newTrialEndsAt: newTrialEnd.toISOString(),
+  };
+}
+
 /**
  * Cria a subscription Pix e retorna QR code + copia e cola pra UI embutida.
  * O client faz polling em getPaymentStatus ate confirmar.

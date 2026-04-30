@@ -4,7 +4,11 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export type VoucherType = "fixed_price" | "percent" | "fixed_discount";
+export type VoucherType =
+  | "fixed_price"
+  | "percent"
+  | "fixed_discount"
+  | "extend_trial_days";
 
 export type Voucher = {
   id: string;
@@ -63,6 +67,10 @@ export async function validateVoucher(
     finalPrice = Math.max(0, basePrice * (1 - Number(v.value) / 100));
   } else if (v.type === "fixed_discount") {
     finalPrice = Math.max(0, basePrice - Number(v.value));
+  } else if (v.type === "extend_trial_days") {
+    // Cupom de parceiro: nao mexe no preco, e aplicado por outro fluxo.
+    // Retorna invalido aqui pra forcar uso da action correta.
+    return { ok: false, reason: "Cupom de parceiro: aplique no campo de codigo de parceiro" };
   }
 
   finalPrice = Math.round(finalPrice * 100) / 100;
