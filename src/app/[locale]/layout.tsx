@@ -10,6 +10,16 @@ export const metadata: Metadata = {
   title: "Ultra Personal Trainer",
   description:
     "Plataforma completa para personal trainers: capte, atenda, prescreva treinos e cobre seus alunos online.",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Ultra PT",
+  },
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/icon.svg" }],
+  },
 };
 
 export const viewport: Viewport = {

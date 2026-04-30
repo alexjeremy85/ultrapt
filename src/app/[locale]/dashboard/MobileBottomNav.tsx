@@ -42,12 +42,12 @@ export function MobileBottomNav() {
             <li key={it.href} className="flex-1">
               <Link
                 href={it.href}
-                className={`flex flex-col items-center justify-center gap-0.5 px-2 py-2.5 text-[10px] font-medium transition ${
+                className={`flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 text-[9px] font-medium transition ${
                   active ? "text-accent" : "text-ink-dim hover:text-ink"
                 }`}
               >
                 <span
-                  className={`flex h-6 w-6 items-center justify-center ${
+                  className={`flex h-5 w-5 items-center justify-center ${
                     active ? "" : "opacity-80"
                   }`}
                 >

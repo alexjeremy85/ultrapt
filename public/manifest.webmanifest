@@ -1,0 +1,20 @@
+{
+  "name": "Ultra Personal Trainer",
+  "short_name": "Ultra PT",
+  "description": "Plataforma para personal trainers gerenciarem alunos, treinos e cobranças.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
