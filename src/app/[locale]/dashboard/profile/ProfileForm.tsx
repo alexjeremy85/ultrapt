@@ -2,12 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import {
-  updateProfile,
-  uploadProfilePhoto,
-  uploadCoverImage,
-  updateLandingCustomization,
-} from "./actions";
+import { saveProfile } from "./actions";
 import { TestimonialsEditor } from "./TestimonialsEditor";
 import { HighlightsEditor } from "./HighlightsEditor";
 
@@ -99,6 +94,9 @@ export function ProfileForm({
   const [accentColor, setAccentColor] = useState(
     trainer.accent_color ?? "#ff6b00"
   );
+  // Previews locais quando o user troca arquivo (sem precisar salvar pra ver)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
 
   const onCopy = async () => {
     await navigator.clipboard.writeText(publicUrl);
@@ -106,353 +104,360 @@ export function ProfileForm({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const onPickPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    setPhotoPreview(f ? URL.createObjectURL(f) : null);
+  };
+  const onPickCover = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    setCoverPreview(f ? URL.createObjectURL(f) : null);
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Foto de perfil */}
-      <Section title={t("Profile.field_photo")}>
-        <div className="flex items-center gap-4">
-          <div className="h-20 w-20 overflow-hidden rounded-full bg-bg-elevated">
-            {trainer.photo_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={trainer.photo_url}
-                alt={trainer.full_name}
-                className="h-full w-full object-cover"
+    <form
+      action={saveProfile}
+      encType="multipart/form-data"
+      className="space-y-5"
+    >
+      {/* Hidden inputs pros states de template/cor */}
+      <input type="hidden" name="template_id" value={selectedTemplate} />
+      <input type="hidden" name="accent_color" value={accentColor} />
+
+      {/* Foto + capa */}
+      <Section title="Foto de perfil e capa">
+        <div className="space-y-4">
+          {/* Avatar */}
+          <div className="flex items-center gap-4">
+            <div className="h-20 w-20 shrink-0 overflow-hidden rounded-full bg-bg-elevated">
+              {photoPreview || trainer.photo_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={photoPreview ?? trainer.photo_url ?? ""}
+                  alt={trainer.full_name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-2xl font-bold text-accent">
+                  {trainer.full_name.charAt(0).toUpperCase()}
+                </div>
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <label className="label">Foto de perfil</label>
+              <input
+                name="photo"
+                type="file"
+                accept="image/*"
+                onChange={onPickPhoto}
+                className="block w-full text-sm text-ink-muted file:mr-3 file:rounded-md file:border file:border-border file:bg-bg-elevated file:px-3 file:py-1.5 file:text-sm file:text-ink hover:file:border-accent"
               />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-2xl font-bold text-accent">
-                {trainer.full_name.charAt(0).toUpperCase()}
+              <p className="hint">Máx 5MB. Salva quando você apertar &quot;Salvar tudo&quot;.</p>
+            </div>
+          </div>
+
+          {/* Capa */}
+          <div>
+            <label className="label">Imagem de capa (opcional)</label>
+            {(coverPreview || trainer.cover_image_url) && (
+              <div className="mb-2 h-28 w-full overflow-hidden rounded-lg bg-bg-elevated">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={coverPreview ?? trainer.cover_image_url ?? ""}
+                  alt="Capa"
+                  className="h-full w-full object-cover"
+                />
               </div>
             )}
-          </div>
-
-          <form action={uploadProfilePhoto} className="flex items-center gap-2">
             <input
-              name="photo"
+              name="cover"
               type="file"
               accept="image/*"
-              required
-              className="block text-sm text-ink-muted file:mr-3 file:rounded-md file:border file:border-border file:bg-bg-elevated file:px-3 file:py-1.5 file:text-sm file:text-ink hover:file:border-accent"
+              onChange={onPickCover}
+              className="block w-full text-sm text-ink-muted file:mr-3 file:rounded-md file:border file:border-border file:bg-bg-elevated file:px-3 file:py-1.5 file:text-sm file:text-ink hover:file:border-accent"
             />
-            <button type="submit" className="btn-primary text-sm">
-              {t("Common.save")}
-            </button>
-          </form>
-        </div>
-      </Section>
-
-      {/* Cover image */}
-      <Section
-        title="Imagem de capa (opcional)"
-        subtitle="Banner do topo da página. Recomendamos foto sua treinando, paisagem fitness, etc. (1920x1080 ideal)"
-      >
-        {trainer.cover_image_url && (
-          <div className="mb-3 h-32 w-full overflow-hidden rounded-lg bg-bg-elevated">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={trainer.cover_image_url}
-              alt="Capa"
-              className="h-full w-full object-cover"
-            />
+            <p className="hint">Máx 8MB. Banner do topo da landing (1920×1080 ideal).</p>
           </div>
-        )}
-        <form action={uploadCoverImage} className="flex items-center gap-2">
-          <input
-            name="cover"
-            type="file"
-            accept="image/*"
-            required
-            className="block text-sm text-ink-muted file:mr-3 file:rounded-md file:border file:border-border file:bg-bg-elevated file:px-3 file:py-1.5 file:text-sm file:text-ink hover:file:border-accent"
-          />
-          <button type="submit" className="btn-primary text-sm">
-            Enviar
-          </button>
-        </form>
+        </div>
       </Section>
 
       {/* Dados básicos */}
-      <form action={updateProfile} className="space-y-6">
-        <Section title={t("Profile.section_basic")}>
-          <Field label={t("Profile.field_full_name")}>
-            <input
-              name="full_name"
-              defaultValue={trainer.full_name}
-              required
-              className="input"
-            />
-          </Field>
-          <Field label={t("Profile.field_cref")}>
-            <input
-              name="cref"
-              defaultValue={trainer.cref ?? ""}
-              className="input"
-            />
-          </Field>
-        </Section>
+      <Section title={t("Profile.section_basic")}>
+        <Field label={t("Profile.field_full_name")}>
+          <input
+            name="full_name"
+            defaultValue={trainer.full_name}
+            required
+            className="input h-11"
+          />
+        </Field>
+        <Field label={t("Profile.field_cref")}>
+          <input
+            name="cref"
+            defaultValue={trainer.cref ?? ""}
+            className="input h-11"
+          />
+        </Field>
+      </Section>
 
-        <Section title={t("Profile.section_public")}>
-          <Field
-            label={t("Profile.field_slug")}
-            hint={t("Profile.field_slug_hint", { url: publicUrl })}
-            extra={
-              <button
-                type="button"
-                onClick={onCopy}
-                className="ml-2 text-xs text-accent hover:text-accent-hover"
-              >
-                {copied ? t("Common.copied") : t("Common.copy")}
-              </button>
-            }
-          >
-            <input
-              name="slug"
-              defaultValue={trainer.slug}
-              required
-              pattern="[a-z0-9]+(-[a-z0-9]+)*"
-              className="input"
-            />
-          </Field>
-
-          <Field label={t("Profile.field_bio")} hint={t("Profile.field_bio_hint")}>
-            <textarea
-              name="bio"
-              defaultValue={trainer.bio ?? ""}
-              rows={4}
-              className="input"
-            />
-          </Field>
-
-          <Field
-            label={t("Profile.field_specialties")}
-            hint={t("Profile.field_specialties_hint")}
-          >
-            <input
-              name="specialties"
-              defaultValue={(trainer.specialties ?? []).join(", ")}
-              className="input"
-            />
-          </Field>
-
-          <Field
-            label={t("Profile.field_services")}
-            hint={t("Profile.field_services_hint")}
-          >
-            <textarea
-              name="services_description"
-              defaultValue={trainer.services_description ?? ""}
-              rows={3}
-              className="input"
-            />
-          </Field>
-
-          <Field
-            label={t("Profile.field_pricing")}
-            hint={t("Profile.field_pricing_hint")}
-          >
-            <input
-              name="pricing_summary"
-              defaultValue={trainer.pricing_summary ?? ""}
-              className="input"
-            />
-          </Field>
-        </Section>
-
-        <Section title={t("Profile.section_contact")}>
-          <div className="grid grid-cols-2 gap-4">
-            <Field
-              label={t("Profile.field_whatsapp")}
-              hint={t("Profile.field_whatsapp_hint")}
+      {/* Página pública */}
+      <Section title={t("Profile.section_public")}>
+        <Field
+          label={t("Profile.field_slug")}
+          hint={t("Profile.field_slug_hint", { url: publicUrl })}
+          extra={
+            <button
+              type="button"
+              onClick={onCopy}
+              className="ml-2 text-xs text-accent hover:text-accent-hover"
             >
-              <input
-                name="whatsapp_phone"
-                defaultValue={trainer.whatsapp_phone ?? ""}
-                className="input"
-              />
-            </Field>
-            <Field
-              label={t("Profile.field_instagram")}
-              hint={t("Profile.field_instagram_hint")}
-            >
-              <input
-                name="instagram_handle"
-                defaultValue={trainer.instagram_handle ?? ""}
-                className="input"
-              />
-            </Field>
-            <Field label={t("Profile.field_city")}>
-              <input
-                name="city"
-                defaultValue={trainer.city ?? ""}
-                className="input"
-              />
-            </Field>
-            <Field label={t("Profile.field_state")}>
-              <input
-                name="state"
-                defaultValue={trainer.state ?? ""}
-                maxLength={2}
-                className="input uppercase"
-              />
-            </Field>
-          </div>
-        </Section>
-
-        <div className="flex justify-end">
-          <button type="submit" className="btn-primary">
-            {t("Profile.btn_save")}
-          </button>
-        </div>
-      </form>
-
-      {/* PERSONALIZAÇÃO DA LANDING */}
-      <form action={updateLandingCustomization} className="space-y-6">
-        <Section
-          title="Template da página pública"
-          subtitle="Escolha o estilo visual da sua landing. Você pode trocar a qualquer momento."
+              {copied ? t("Common.copied") : t("Common.copy")}
+            </button>
+          }
         >
-          <input type="hidden" name="template_id" value={selectedTemplate} />
-          <input type="hidden" name="accent_color" value={accentColor} />
+          <input
+            name="slug"
+            defaultValue={trainer.slug}
+            required
+            pattern="[a-z0-9]+(-[a-z0-9]+)*"
+            className="input h-11"
+          />
+        </Field>
 
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-            {TEMPLATES.map((tpl) => (
+        <Field label={t("Profile.field_bio")} hint={t("Profile.field_bio_hint")}>
+          <textarea
+            name="bio"
+            defaultValue={trainer.bio ?? ""}
+            rows={4}
+            className="input"
+          />
+        </Field>
+
+        <Field
+          label={t("Profile.field_specialties")}
+          hint={t("Profile.field_specialties_hint")}
+        >
+          <input
+            name="specialties"
+            defaultValue={(trainer.specialties ?? []).join(", ")}
+            className="input h-11"
+          />
+        </Field>
+
+        <Field
+          label={t("Profile.field_services")}
+          hint={t("Profile.field_services_hint")}
+        >
+          <textarea
+            name="services_description"
+            defaultValue={trainer.services_description ?? ""}
+            rows={3}
+            className="input"
+          />
+        </Field>
+
+        <Field
+          label={t("Profile.field_pricing")}
+          hint={t("Profile.field_pricing_hint")}
+        >
+          <input
+            name="pricing_summary"
+            defaultValue={trainer.pricing_summary ?? ""}
+            className="input h-11"
+          />
+        </Field>
+      </Section>
+
+      {/* Contato */}
+      <Section title={t("Profile.section_contact")}>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Field
+            label={t("Profile.field_whatsapp")}
+            hint={t("Profile.field_whatsapp_hint")}
+          >
+            <input
+              name="whatsapp_phone"
+              defaultValue={trainer.whatsapp_phone ?? ""}
+              className="input h-11"
+            />
+          </Field>
+          <Field
+            label={t("Profile.field_instagram")}
+            hint={t("Profile.field_instagram_hint")}
+          >
+            <input
+              name="instagram_handle"
+              defaultValue={trainer.instagram_handle ?? ""}
+              className="input h-11"
+            />
+          </Field>
+          <Field label={t("Profile.field_city")}>
+            <input
+              name="city"
+              defaultValue={trainer.city ?? ""}
+              className="input h-11"
+            />
+          </Field>
+          <Field label={t("Profile.field_state")}>
+            <input
+              name="state"
+              defaultValue={trainer.state ?? ""}
+              maxLength={2}
+              className="input h-11 uppercase"
+            />
+          </Field>
+        </div>
+      </Section>
+
+      {/* Template */}
+      <Section
+        title="Template da página pública"
+        subtitle="Escolha o estilo visual da sua landing."
+      >
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          {TEMPLATES.map((tpl) => (
+            <button
+              key={tpl.id}
+              type="button"
+              onClick={() => setSelectedTemplate(tpl.id)}
+              className={`rounded-xl border-2 p-4 text-left transition ${
+                selectedTemplate === tpl.id
+                  ? "border-accent bg-accent/10"
+                  : "border-border bg-bg-surface hover:border-border-strong"
+              }`}
+            >
+              <div
+                className="h-12 w-full rounded-lg border border-border"
+                style={{ background: tpl.swatch }}
+              />
+              <div className="mt-3 font-bold">{tpl.name}</div>
+              <div className="mt-1 text-xs text-ink-muted">
+                {tpl.description}
+              </div>
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-4">
+          <label className="label">Cor de destaque</label>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {ACCENT_COLORS.map((c) => (
               <button
-                key={tpl.id}
+                key={c.value}
                 type="button"
-                onClick={() => setSelectedTemplate(tpl.id)}
-                className={`rounded-xl border-2 p-4 text-left transition ${
-                  selectedTemplate === tpl.id
-                    ? "border-accent bg-accent/10"
-                    : "border-border bg-bg-surface hover:border-border-strong"
+                onClick={() => setAccentColor(c.value)}
+                className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition ${
+                  accentColor === c.value
+                    ? "border-ink"
+                    : "border-border hover:border-border-strong"
                 }`}
               >
-                <div
-                  className="h-12 w-full rounded-lg border border-border"
-                  style={{ background: tpl.swatch }}
+                <span
+                  className="h-4 w-4 rounded-full"
+                  style={{ background: c.value }}
                 />
-                <div className="mt-3 font-bold">{tpl.name}</div>
-                <div className="mt-1 text-xs text-ink-muted">
-                  {tpl.description}
-                </div>
+                {c.name}
               </button>
             ))}
           </div>
-
-          <div className="mt-6">
-            <label className="label">Cor de destaque</label>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {ACCENT_COLORS.map((c) => (
-                <button
-                  key={c.value}
-                  type="button"
-                  onClick={() => setAccentColor(c.value)}
-                  className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition ${
-                    accentColor === c.value
-                      ? "border-ink"
-                      : "border-border hover:border-border-strong"
-                  }`}
-                >
-                  <span
-                    className="h-4 w-4 rounded-full"
-                    style={{ background: c.value }}
-                  />
-                  {c.name}
-                </button>
-              ))}
-            </div>
-          </div>
-        </Section>
-
-        <Section
-          title="Texto principal (opcional)"
-          subtitle="Personalize o título e subtítulo do hero. Em branco = usa seu nome e bio."
-        >
-          <Field
-            label="Título principal"
-            hint="Ex.: 'Transforme seu corpo em 90 dias'"
-          >
-            <input
-              name="headline"
-              defaultValue={trainer.headline ?? ""}
-              maxLength={120}
-              className="input"
-            />
-          </Field>
-
-          <Field
-            label="Subtítulo"
-            hint="Ex.: 'Método validado em 200+ alunas. Online ou presencial.'"
-          >
-            <textarea
-              name="subheadline"
-              defaultValue={trainer.subheadline ?? ""}
-              rows={2}
-              maxLength={300}
-              className="input"
-            />
-          </Field>
-
-          <Field
-            label="Texto do botão de CTA"
-            hint="Ex.: 'Quero treinar com você', 'Começar agora', 'Agendar conversa'"
-          >
-            <input
-              name="cta_text"
-              defaultValue={trainer.cta_text ?? ""}
-              maxLength={50}
-              className="input"
-            />
-          </Field>
-        </Section>
-
-        <Section
-          title="Estatísticas de credibilidade"
-          subtitle="Números que aparecem em destaque. Deixe 0 se não quiser exibir."
-        >
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="Anos de experiência">
-              <input
-                name="years_experience"
-                type="number"
-                min="0"
-                max="60"
-                defaultValue={trainer.years_experience ?? ""}
-                className="input"
-              />
-            </Field>
-            <Field label="Alunos atendidos (total)">
-              <input
-                name="students_helped"
-                type="number"
-                min="0"
-                max="100000"
-                defaultValue={trainer.students_helped ?? ""}
-                className="input"
-              />
-            </Field>
-          </div>
-        </Section>
-
-        <Section
-          title="Diferenciais (até 6)"
-          subtitle="Cards com ícone + título + descrição que aparecem na landing."
-        >
-          <HighlightsEditor initial={trainer.highlights ?? []} />
-        </Section>
-
-        <Section
-          title="Depoimentos de alunos (até 6)"
-          subtitle="Aumenta drasticamente a conversão. Use depoimentos reais com nome e cargo/situação."
-        >
-          <TestimonialsEditor initial={trainer.testimonials ?? []} />
-        </Section>
-
-        <div className="flex justify-end">
-          <button type="submit" className="btn-primary">
-            Salvar personalização
-          </button>
         </div>
-      </form>
-    </div>
+      </Section>
+
+      {/* Texto principal */}
+      <Section
+        title="Texto principal (opcional)"
+        subtitle="Personalize título e subtítulo do hero. Vazio = usa nome e bio."
+      >
+        <Field
+          label="Título principal"
+          hint="Ex.: 'Transforme seu corpo em 90 dias'"
+        >
+          <input
+            name="headline"
+            defaultValue={trainer.headline ?? ""}
+            maxLength={120}
+            className="input h-11"
+          />
+        </Field>
+
+        <Field
+          label="Subtítulo"
+          hint="Ex.: 'Método validado em 200+ alunas. Online ou presencial.'"
+        >
+          <textarea
+            name="subheadline"
+            defaultValue={trainer.subheadline ?? ""}
+            rows={2}
+            maxLength={300}
+            className="input"
+          />
+        </Field>
+
+        <Field
+          label="Texto do botão CTA"
+          hint="Ex.: 'Quero treinar com você', 'Começar agora'"
+        >
+          <input
+            name="cta_text"
+            defaultValue={trainer.cta_text ?? ""}
+            maxLength={50}
+            className="input h-11"
+          />
+        </Field>
+      </Section>
+
+      {/* Estatísticas */}
+      <Section
+        title="Estatísticas de credibilidade"
+        subtitle="Números em destaque. Deixe vazio se não quiser exibir."
+      >
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Anos de experiência">
+            <input
+              name="years_experience"
+              type="number"
+              min="0"
+              max="60"
+              defaultValue={trainer.years_experience ?? ""}
+              className="input h-11"
+            />
+          </Field>
+          <Field label="Alunos atendidos">
+            <input
+              name="students_helped"
+              type="number"
+              min="0"
+              max="100000"
+              defaultValue={trainer.students_helped ?? ""}
+              className="input h-11"
+            />
+          </Field>
+        </div>
+      </Section>
+
+      {/* Diferenciais */}
+      <Section
+        title="Diferenciais (até 6)"
+        subtitle="Cards com ícone + título + descrição."
+      >
+        <HighlightsEditor initial={trainer.highlights ?? []} />
+      </Section>
+
+      {/* Depoimentos */}
+      <Section
+        title="Depoimentos (até 6)"
+        subtitle="Aumenta drasticamente a conversão. Use depoimentos reais."
+      >
+        <TestimonialsEditor initial={trainer.testimonials ?? []} />
+      </Section>
+
+      {/* Botão único de salvar tudo */}
+      <button
+        type="submit"
+        className="btn-primary h-12 w-full text-base md:ml-auto md:flex md:w-auto md:px-8"
+      >
+        Salvar tudo
+      </button>
+    </form>
   );
 }
 
