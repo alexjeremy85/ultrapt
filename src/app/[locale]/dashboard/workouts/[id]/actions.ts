@@ -131,3 +131,62 @@ export async function deleteWorkoutExercise(id: string) {
   revalidatePath("/[locale]/dashboard/workouts", "layout");
   return { ok: true };
 }
+
+const ALLOWED_LEVELS = ["iniciante", "intermediario", "avancado"] as const;
+type AllowedLevel = (typeof ALLOWED_LEVELS)[number];
+
+function normalizeLevel(input: string): AllowedLevel | null {
+  const v = input.trim().toLowerCase();
+  return (ALLOWED_LEVELS as readonly string[]).includes(v)
+    ? (v as AllowedLevel)
+    : null;
+}
+
+/**
+ * Cria um exercicio customizado do PT (is_global=false) e retorna a row.
+ * Pra usar no modal "Adicionar exercicio" -> "Criar novo".
+ */
+export async function createCustomExercise(input: {
+  name: string;
+  muscle_group: string;
+  equipment?: string;
+  level?: string;
+  notes?: string;
+}): Promise<
+  | { ok: true; exercise: { id: string; name: string; muscle_group: string; equipment: string | null; level: string | null; modality: string; youtube_id: string | null } }
+  | { ok: false; error: string }
+> {
+  const { supabase, user } = await authedClient();
+
+  const name = input.name.trim();
+  const muscleGroup = input.muscle_group.trim();
+  if (!name) return { ok: false, error: "Nome obrigatorio" };
+  if (!muscleGroup) return { ok: false, error: "Grupo muscular obrigatorio" };
+  if (name.length > 100) return { ok: false, error: "Nome muito longo" };
+
+  const equipment = (input.equipment ?? "").trim() || null;
+  const level = input.level ? normalizeLevel(input.level) : null;
+  const notes = (input.notes ?? "").trim() || null;
+
+  const { data, error } = await supabase
+    .from("exercises")
+    .insert({
+      trainer_id: user.id,
+      name,
+      muscle_group: muscleGroup,
+      equipment,
+      level,
+      modality: "musculacao",
+      is_global: false,
+      technique_tips: notes,
+    })
+    .select(
+      "id, name, muscle_group, equipment, level, modality, youtube_id"
+    )
+    .single();
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/[locale]/dashboard/workouts", "layout");
+  return { ok: true, exercise: data };
+}
