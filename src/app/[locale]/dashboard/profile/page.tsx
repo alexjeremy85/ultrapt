@@ -120,8 +120,22 @@ export default async function ProfilePage({
       {/* @ts-expect-error trainer shape compativel via fallback */}
       <ProfileForm trainer={trainer} publicUrl={publicUrl} />
 
-      {/* Botao de logout — visivel pra mobile que nao tem mais TopBar */}
-      <div className="border-t border-border pt-4">
+      {/* Atalhos extras pra mobile (que nao tem sidebar) */}
+      <div className="border-t border-border pt-4 space-y-2">
+        <Link
+          href="/dashboard/billing"
+          className="btn-secondary w-full justify-between"
+        >
+          <span>Assinatura e pagamento</span>
+          <span className="text-ink-dim">→</span>
+        </Link>
+        <Link
+          href="/dashboard/leads"
+          className="btn-secondary w-full justify-between"
+        >
+          <span>Leads recebidos</span>
+          <span className="text-ink-dim">→</span>
+        </Link>
         <form action={logout}>
           <button
             type="submit"

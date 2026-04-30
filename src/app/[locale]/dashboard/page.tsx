@@ -7,7 +7,9 @@ import {
   ArrowRightIcon,
   DumbbellIcon,
   UserIcon,
+  ChatIcon,
 } from "@/components/icons";
+import { trainerUnreadCounts } from "@/lib/chat";
 import { CaptacaoCard } from "./CaptacaoCard";
 
 export default async function DashboardPage({
@@ -34,12 +36,13 @@ export default async function DashboardPage({
     return null;
   }
 
-  // Pega listas pra acoes pendentes (alunos sem treino + leads)
+  // Pega listas pra acoes pendentes (alunos sem treino + leads + chat)
   const [
     { data: studentsRaw },
     { count: studentsCount },
     { count: activeStudents },
     { count: workoutCount },
+    unread,
   ] = await Promise.all([
     supabase
       .from("students")
@@ -62,6 +65,7 @@ export default async function DashboardPage({
       .from("workouts")
       .select("*", { count: "exact", head: true })
       .eq("trainer_id", user!.id),
+    trainerUnreadCounts(),
   ]);
 
   type StudentRow = {
@@ -77,6 +81,13 @@ export default async function DashboardPage({
     (s) => !(s.workout_assignments ?? []).some((a) => a.workout_id)
   );
   const pendingLeads = all.filter((s) => s.status === "pending");
+
+  // Alunos com mensagens nao lidas — ordena pela contagem desc e
+  // garante que a lista preserva info de nome/foto do aluno
+  const studentsWithUnread = all
+    .map((s) => ({ student: s, unread: unread.byStudent[s.id] ?? 0 }))
+    .filter((x) => x.unread > 0)
+    .sort((a, b) => b.unread - a.unread);
 
   const publicUrl = `${getSiteUrl()}/pt/${trainer.slug}`;
   const firstName = (trainer.full_name ?? "").split(" ")[0] || "PT";
@@ -114,6 +125,53 @@ export default async function DashboardPage({
           Novo treino
         </Link>
       </div>
+
+      {/* Mensagens nao lidas — prioridade max */}
+      {studentsWithUnread.length > 0 && (
+        <section>
+          <h2 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-ink-dim">
+            <ChatIcon className="h-3.5 w-3.5" />
+            Mensagens novas
+          </h2>
+          <ul className="space-y-2">
+            {studentsWithUnread.slice(0, 5).map(({ student: s, unread: count }) => (
+              <li key={s.id}>
+                <Link
+                  href={`/dashboard/students/${s.id}/chat`}
+                  className="flex items-center gap-3 rounded-xl border border-accent/40 bg-accent/10 p-3 transition active:scale-[0.99] hover:border-accent/60"
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-bg-elevated">
+                    {s.photo_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={s.photo_url}
+                        alt={s.full_name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-sm font-bold text-accent">
+                        {s.full_name.charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-semibold">
+                      {s.full_name}
+                    </div>
+                    <div className="text-xs text-accent">
+                      {count === 1 ? "1 mensagem nova" : `${count} mensagens novas`}{" "}
+                      →
+                    </div>
+                  </div>
+                  <span className="flex h-7 min-w-7 items-center justify-center rounded-full bg-accent px-1.5 text-xs font-bold text-black">
+                    {count > 99 ? "99+" : count}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* Acoes pendentes — destaque pra alunos sem treino */}
       {studentsWithoutWorkout.length > 0 && (

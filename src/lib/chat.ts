@@ -75,6 +75,35 @@ export async function trainerLoadMessages(
   return (data ?? []) as ChatMessage[];
 }
 
+/**
+ * Retorna contagem de mensagens nao lidas do aluno por student_id.
+ * Resposta: { byStudent: Map<student_id, count>, total }
+ */
+export async function trainerUnreadCounts(): Promise<{
+  byStudent: Record<string, number>;
+  total: number;
+}> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { byStudent: {}, total: 0 };
+
+  const { data } = await supabase
+    .from("chat_messages")
+    .select("student_id")
+    .eq("trainer_id", user.id)
+    .eq("sender_role", "student")
+    .is("read_at", null);
+
+  const byStudent: Record<string, number> = {};
+  for (const row of (data ?? []) as Array<{ student_id: string }>) {
+    byStudent[row.student_id] = (byStudent[row.student_id] ?? 0) + 1;
+  }
+  const total = Object.values(byStudent).reduce((a, b) => a + b, 0);
+  return { byStudent, total };
+}
+
 // ----- LADO ALUNO ---------------------------------------------------------
 // Usa admin client porque o aluno e anonimo (sem auth.uid).
 

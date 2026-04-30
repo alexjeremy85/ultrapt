@@ -11,6 +11,7 @@ import {
   BadgeIcon,
 } from "@/components/icons";
 import { logout } from "../(auth)/login/actions";
+import { trainerUnreadCounts } from "@/lib/chat";
 import { SidebarLink } from "./SidebarLink";
 import { TrialBanner } from "./TrialBanner";
 import { MobileBottomNav } from "./MobileBottomNav";
@@ -35,11 +36,14 @@ export default async function DashboardLayout({
     redirect({ href: "/login", locale });
   }
 
-  const { data: trainer } = await supabase
-    .from("trainers")
-    .select("full_name, slug, photo_url, subscription_status, trial_ends_at")
-    .eq("id", user!.id)
-    .maybeSingle();
+  const [{ data: trainer }, unread] = await Promise.all([
+    supabase
+      .from("trainers")
+      .select("full_name, slug, photo_url, subscription_status, trial_ends_at")
+      .eq("id", user!.id)
+      .maybeSingle(),
+    trainerUnreadCounts(),
+  ]);
 
   return (
     <div className="flex min-h-dvh bg-bg">
@@ -130,7 +134,7 @@ export default async function DashboardLayout({
           {children}
         </main>
       </div>
-      <MobileBottomNav />
+      <MobileBottomNav unreadStudents={unread.total} />
     </div>
   );
 }
