@@ -4,11 +4,11 @@ import { createClient } from "@/lib/supabase/server";
 import { getSiteUrl } from "@/lib/site-url";
 import {
   PlusIcon,
-  ExternalLinkIcon,
   ArrowRightIcon,
   DumbbellIcon,
   UserIcon,
 } from "@/components/icons";
+import { CaptacaoCard } from "./CaptacaoCard";
 
 export default async function DashboardPage({
   params,
@@ -210,27 +210,7 @@ export default async function DashboardPage({
       )}
 
       {/* Pagina publica */}
-      <section className="card">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-dim">
-          Sua página de captação
-        </h2>
-        <p className="mt-1 text-xs text-ink-muted">
-          Compartilhe pra captar novos alunos.
-        </p>
-        <div className="mt-3 flex items-center gap-2">
-          <code className="flex-1 truncate rounded-lg bg-bg-surface px-3 py-2 text-xs text-accent">
-            {publicUrl}
-          </code>
-          <Link
-            href={`/pt/${trainer.slug}`}
-            target="_blank"
-            className="btn-secondary inline-flex shrink-0 items-center gap-1.5 text-sm"
-          >
-            <ExternalLinkIcon className="h-4 w-4" />
-            Abrir
-          </Link>
-        </div>
-      </section>
+      <CaptacaoCard publicUrl={publicUrl} trainerSlug={trainer.slug} />
 
       {/* Atalho perfil */}
       <Link

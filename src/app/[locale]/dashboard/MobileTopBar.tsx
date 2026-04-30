@@ -13,25 +13,25 @@ export function MobileTopBar({
     <header
       className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-border bg-bg-surface/95 px-4 backdrop-blur md:hidden"
       style={{
-        paddingTop: "calc(env(safe-area-inset-top) + 0.75rem)",
-        paddingBottom: "0.75rem",
+        paddingTop: "calc(env(safe-area-inset-top) + 0.5rem)",
+        paddingBottom: "0.5rem",
       }}
     >
-      <Link href="/dashboard" className="flex items-center gap-2 text-base font-bold">
+      <Link href="/dashboard" className="flex items-center gap-1.5 text-sm font-bold">
         <Logomark />
         Ultra PT
       </Link>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         <Link
           href="/dashboard/profile"
-          className="h-8 w-8 overflow-hidden rounded-full bg-bg-elevated"
+          className="h-7 w-7 overflow-hidden rounded-full bg-bg-elevated"
           aria-label="Meu perfil"
         >
           {photoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={photoUrl} alt="" className="h-full w-full object-cover" />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-xs font-bold text-accent">
+            <div className="flex h-full w-full items-center justify-center text-[10px] font-bold text-accent">
               {(fullName ?? "U").charAt(0).toUpperCase()}
             </div>
           )}
