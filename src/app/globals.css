@@ -106,4 +106,16 @@
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background: #ff6b00;
   }
+
+  /* Padding-top que respeita safe-area-inset-top (notch/dynamic island)
+     em mobile e usa 2rem em desktop. Aplicar em main quando nao ha
+     header sticky cobrindo o topo. */
+  .pt-safe {
+    padding-top: max(1rem, calc(env(safe-area-inset-top) + 0.5rem));
+  }
+  @media (min-width: 768px) {
+    .pt-safe {
+      padding-top: 2rem;
+    }
+  }
 }

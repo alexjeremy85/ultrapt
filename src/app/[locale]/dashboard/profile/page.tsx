@@ -3,6 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSiteUrl } from "@/lib/site-url";
 import { ExternalLinkIcon } from "@/components/icons";
+import { logout } from "../../(auth)/login/actions";
 import { ProfileForm } from "./ProfileForm";
 
 const FULL_COLS = "*";
@@ -118,6 +119,18 @@ export default async function ProfilePage({
 
       {/* @ts-expect-error trainer shape compativel via fallback */}
       <ProfileForm trainer={trainer} publicUrl={publicUrl} />
+
+      {/* Botao de logout — visivel pra mobile que nao tem mais TopBar */}
+      <div className="border-t border-border pt-4">
+        <form action={logout}>
+          <button
+            type="submit"
+            className="btn-ghost w-full text-sm text-ink-dim hover:text-danger"
+          >
+            {t("Auth.btn_logout")}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

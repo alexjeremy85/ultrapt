@@ -13,7 +13,6 @@ import {
 import { logout } from "../(auth)/login/actions";
 import { SidebarLink } from "./SidebarLink";
 import { TrialBanner } from "./TrialBanner";
-import { MobileTopBar } from "./MobileTopBar";
 import { MobileBottomNav } from "./MobileBottomNav";
 
 export default async function DashboardLayout({
@@ -121,17 +120,15 @@ export default async function DashboardLayout({
       </aside>
 
       <div className="flex flex-1 flex-col">
-        <MobileTopBar
-          fullName={trainer?.full_name ?? null}
-          photoUrl={trainer?.photo_url ?? null}
-        />
         <TrialBanner
           status={trainer?.subscription_status ?? null}
           trialEndsAt={trainer?.trial_ends_at ?? null}
         />
-        {/* pb-24 mobile: espaco pra MobileBottomNav (~64px + safe-area).
-            md:pb-0 desktop: sem nav fixa no rodape. */}
-        <main className="flex-1 p-4 pb-24 md:p-8 md:pb-8">{children}</main>
+        {/* pt-safe: respeita notch/dynamic island ja que nao ha TopBar.
+            pb-20 mobile: espaco pra MobileBottomNav. */}
+        <main className="pt-safe flex-1 px-4 pb-20 md:px-8 md:pb-8">
+          {children}
+        </main>
       </div>
       <MobileBottomNav />
     </div>
