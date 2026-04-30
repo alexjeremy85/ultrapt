@@ -12,11 +12,17 @@ type Item = {
   href: string;
   label: string;
   icon: React.ReactNode;
+  badgeKey?: "students";
 };
 
 const items: Item[] = [
   { href: "/dashboard", label: "Início", icon: <HomeIcon className="h-5 w-5" /> },
-  { href: "/dashboard/students", label: "Alunos", icon: <UsersIcon className="h-5 w-5" /> },
+  {
+    href: "/dashboard/students",
+    label: "Alunos",
+    icon: <UsersIcon className="h-5 w-5" />,
+    badgeKey: "students",
+  },
   { href: "/dashboard/workouts", label: "Treinos", icon: <DumbbellIcon className="h-5 w-5" /> },
   { href: "/dashboard/profile", label: "Perfil", icon: <BadgeIcon className="h-5 w-5" /> },
 ];
@@ -26,8 +32,17 @@ function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(href + "/");
 }
 
-export function MobileBottomNav() {
+export function MobileBottomNav({
+  unreadStudents = 0,
+}: {
+  unreadStudents?: number;
+}) {
   const pathname = usePathname();
+
+  function getBadge(key: Item["badgeKey"]): number {
+    if (key === "students") return unreadStudents;
+    return 0;
+  }
 
   return (
     <nav
@@ -38,6 +53,7 @@ export function MobileBottomNav() {
       <ul className="flex items-stretch justify-around">
         {items.map((it) => {
           const active = isActive(pathname, it.href);
+          const badge = getBadge(it.badgeKey);
           return (
             <li key={it.href} className="flex-1">
               <Link
@@ -47,11 +63,16 @@ export function MobileBottomNav() {
                 }`}
               >
                 <span
-                  className={`flex h-5 w-5 items-center justify-center ${
+                  className={`relative flex h-5 w-5 items-center justify-center ${
                     active ? "" : "opacity-80"
                   }`}
                 >
                   {it.icon}
+                  {badge > 0 && (
+                    <span className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[9px] font-bold text-black">
+                      {badge > 99 ? "99+" : badge}
+                    </span>
+                  )}
                 </span>
                 <span>{it.label}</span>
               </Link>

@@ -1,7 +1,8 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { UsersIcon, ArrowRightIcon } from "@/components/icons";
+import { trainerUnreadCounts } from "@/lib/chat";
+import { UsersIcon, ArrowRightIcon, ChatIcon } from "@/components/icons";
 
 export default async function StudentsPage({
   params,
@@ -17,13 +18,16 @@ export default async function StudentsPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: students } = await supabase
-    .from("students")
-    .select(
-      "id, full_name, email, phone, status, objective, experience_level, photo_url, anamnesis_submitted_at, workout_assignments(workout:workouts(id, name))"
-    )
-    .eq("trainer_id", user!.id)
-    .order("created_at", { ascending: false });
+  const [{ data: students }, unread] = await Promise.all([
+    supabase
+      .from("students")
+      .select(
+        "id, full_name, email, phone, status, objective, experience_level, photo_url, anamnesis_submitted_at, workout_assignments(workout:workouts(id, name))"
+      )
+      .eq("trainer_id", user!.id)
+      .order("created_at", { ascending: false }),
+    trainerUnreadCounts(),
+  ]);
 
   const list = (students ?? []) as Array<{
     id: string;
@@ -87,6 +91,7 @@ export default async function StudentsPage({
           {list.map((s) => {
             const workouts = getWorkouts(s);
             const hasWorkout = workouts.length > 0;
+            const unreadCount = unread.byStudent[s.id] ?? 0;
             return (
               <li key={s.id}>
                 <Link
@@ -117,6 +122,12 @@ export default async function StudentsPage({
                           {s.full_name}
                         </span>
                         <StatusBadge status={s.status} />
+                        {unreadCount > 0 && (
+                          <span className="inline-flex items-center gap-0.5 rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-bold text-black">
+                            <ChatIcon className="h-3 w-3" />
+                            {unreadCount}
+                          </span>
+                        )}
                       </div>
 
                       <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-ink-dim">
