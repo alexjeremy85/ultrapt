@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { assignWorkoutToStudent } from "./actions";
+import { SubmitButton } from "@/components/SubmitButton";
 
 export function AssignWorkoutForm({
   studentId,
@@ -74,13 +75,13 @@ export function AssignWorkoutForm({
         />
       </div>
 
-      <button
-        type="submit"
-        disabled={isPending}
+      <SubmitButton
+        pending={isPending}
+        pendingText="Atribuindo..."
         className="btn-primary h-12 w-full text-base"
       >
-        {isPending ? "Atribuindo..." : t("Assign.btn_assign")}
-      </button>
+        {t("Assign.btn_assign")}
+      </SubmitButton>
 
       <a
         href="/dashboard/workouts/new"
