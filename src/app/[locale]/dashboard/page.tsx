@@ -3,12 +3,11 @@ import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSiteUrl } from "@/lib/site-url";
 import {
-  TrendingUpIcon,
-  UsersIcon,
-  UserIcon,
-  DumbbellIcon,
   PlusIcon,
   ExternalLinkIcon,
+  ArrowRightIcon,
+  DumbbellIcon,
+  UserIcon,
 } from "@/components/icons";
 
 export default async function DashboardPage({
@@ -35,145 +34,211 @@ export default async function DashboardPage({
     return null;
   }
 
-  const [{ count: studentsCount }, { count: activeStudents }, { count: pendingLeads }, { count: workoutCount }] =
-    await Promise.all([
-      supabase
-        .from("students")
-        .select("*", { count: "exact", head: true })
-        .eq("trainer_id", user!.id),
-      supabase
-        .from("students")
-        .select("*", { count: "exact", head: true })
-        .eq("trainer_id", user!.id)
-        .eq("status", "active"),
-      supabase
-        .from("students")
-        .select("*", { count: "exact", head: true })
-        .eq("trainer_id", user!.id)
-        .eq("status", "pending"),
-      supabase
-        .from("workouts")
-        .select("*", { count: "exact", head: true })
-        .eq("trainer_id", user!.id),
-    ]);
+  // Pega listas pra acoes pendentes (alunos sem treino + leads)
+  const [
+    { data: studentsRaw },
+    { count: studentsCount },
+    { count: activeStudents },
+    { count: workoutCount },
+  ] = await Promise.all([
+    supabase
+      .from("students")
+      .select(
+        "id, full_name, photo_url, status, anamnesis_submitted_at, workout_assignments(workout_id)"
+      )
+      .eq("trainer_id", user!.id)
+      .order("created_at", { ascending: false })
+      .limit(20),
+    supabase
+      .from("students")
+      .select("*", { count: "exact", head: true })
+      .eq("trainer_id", user!.id),
+    supabase
+      .from("students")
+      .select("*", { count: "exact", head: true })
+      .eq("trainer_id", user!.id)
+      .eq("status", "active"),
+    supabase
+      .from("workouts")
+      .select("*", { count: "exact", head: true })
+      .eq("trainer_id", user!.id),
+  ]);
+
+  type StudentRow = {
+    id: string;
+    full_name: string;
+    photo_url: string | null;
+    status: string;
+    anamnesis_submitted_at: string | null;
+    workout_assignments: Array<{ workout_id: string | null }>;
+  };
+  const all = (studentsRaw ?? []) as StudentRow[];
+  const studentsWithoutWorkout = all.filter(
+    (s) => !(s.workout_assignments ?? []).some((a) => a.workout_id)
+  );
+  const pendingLeads = all.filter((s) => s.status === "pending");
 
   const publicUrl = `${getSiteUrl()}/pt/${trainer.slug}`;
+  const firstName = (trainer.full_name ?? "").split(" ")[0] || "PT";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
+      {/* Header simplificado */}
       <div>
-        <h1 className="text-3xl font-bold">{t("Dashboard.title")}</h1>
-        <p className="mt-1 text-ink-muted">{t("Dashboard.subtitle")}</p>
+        <h1 className="text-2xl font-bold">Olá, {firstName} 👋</h1>
+        <p className="mt-1 text-sm text-ink-muted">
+          {(activeStudents ?? 0)} ativo
+          {(activeStudents ?? 0) === 1 ? "" : "s"} ·{" "}
+          {(studentsCount ?? 0) - (activeStudents ?? 0)} pendente
+          {(studentsCount ?? 0) - (activeStudents ?? 0) === 1 ? "" : "s"} ·{" "}
+          {workoutCount ?? 0} treino
+          {(workoutCount ?? 0) === 1 ? "" : "s"} criado
+          {(workoutCount ?? 0) === 1 ? "" : "s"}
+        </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Card
-          icon={<TrendingUpIcon className="h-5 w-5" />}
-          title={t("Dashboard.card_active_students")}
-          value={activeStudents ?? 0}
-        />
-        <Card
-          icon={<UsersIcon className="h-5 w-5" />}
-          title={t("Dashboard.card_total_students")}
-          value={studentsCount ?? 0}
-        />
-        <Card
-          icon={<UserIcon className="h-5 w-5" />}
-          title={t("Dashboard.card_pending_leads")}
-          value={pendingLeads ?? 0}
-          highlight={(pendingLeads ?? 0) > 0}
-        />
-        <Card
-          icon={<DumbbellIcon className="h-5 w-5" />}
-          title={t("Dashboard.card_workouts")}
-          value={workoutCount ?? 0}
-        />
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="card lg:col-span-2">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-dim">
-            {t("Dashboard.share_link_title")}
-          </h2>
-          <p className="mt-2 text-ink-muted">{t("Dashboard.share_link_subtitle")}</p>
-          <div className="mt-4 flex items-center gap-2">
-            <code className="flex-1 truncate rounded-lg bg-bg-surface px-3 py-2.5 text-sm text-accent">
-              {publicUrl}
-            </code>
-            <Link
-              href={`/pt/${trainer.slug}`}
-              target="_blank"
-              className="btn-secondary inline-flex items-center gap-1.5"
-            >
-              <ExternalLinkIcon className="h-4 w-4" />
-              {t("Dashboard.open")}
-            </Link>
-          </div>
-        </div>
-
-        <div className="card">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-dim">
-            {t("Dashboard.quick_actions")}
-          </h2>
-          <div className="mt-4 space-y-2">
-            <Link
-              href="/dashboard/students/new"
-              className="btn-primary inline-flex w-full items-center justify-center gap-1.5"
-            >
-              <PlusIcon className="h-4 w-4" />
-              {t("Dashboard.action_new_student")}
-            </Link>
-            <Link
-              href="/dashboard/workouts/new"
-              className="btn-secondary inline-flex w-full items-center justify-center gap-1.5"
-            >
-              <PlusIcon className="h-4 w-4" />
-              {t("Dashboard.action_new_workout")}
-            </Link>
-            <Link href="/dashboard/profile" className="btn-ghost w-full">
-              {t("Dashboard.action_edit_profile")}
-            </Link>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Card({
-  icon,
-  title,
-  value,
-  highlight,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  value: string | number;
-  highlight?: boolean;
-}) {
-  return (
-    <div
-      className={`card transition ${
-        highlight ? "border-accent/40 shadow-glow-sm" : ""
-      }`}
-    >
-      <div className="flex items-start justify-between">
-        <div>
-          <div className="text-xs uppercase tracking-wider text-ink-dim">
-            {title}
-          </div>
-          <div className="mt-1 text-3xl font-bold">{value}</div>
-        </div>
-        <div
-          className={`flex h-9 w-9 items-center justify-center rounded-lg ${
-            highlight
-              ? "bg-accent/15 text-accent"
-              : "bg-bg-elevated text-ink-muted"
-          }`}
+      {/* Acoes rapidas top */}
+      <div className="flex gap-2">
+        <Link
+          href="/dashboard/students/new"
+          className="btn-primary inline-flex flex-1 items-center justify-center gap-1.5"
         >
-          {icon}
-        </div>
+          <PlusIcon className="h-4 w-4" />
+          Novo aluno
+        </Link>
+        <Link
+          href="/dashboard/workouts/new"
+          className="btn-secondary inline-flex flex-1 items-center justify-center gap-1.5"
+        >
+          <PlusIcon className="h-4 w-4" />
+          Novo treino
+        </Link>
       </div>
+
+      {/* Acoes pendentes — destaque pra alunos sem treino */}
+      {studentsWithoutWorkout.length > 0 && (
+        <section>
+          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink-dim">
+            Alunos sem treino atribuído
+          </h2>
+          <ul className="space-y-2">
+            {studentsWithoutWorkout.slice(0, 3).map((s) => (
+              <li key={s.id}>
+                <Link
+                  href={`/dashboard/students/${s.id}`}
+                  className="flex items-center gap-3 rounded-xl border border-warning/30 bg-warning/5 p-3 transition active:scale-[0.99] hover:border-warning/60"
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-bg-elevated">
+                    {s.photo_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={s.photo_url}
+                        alt={s.full_name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-sm font-bold text-warning">
+                        {s.full_name.charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-semibold">
+                      {s.full_name}
+                    </div>
+                    <div className="text-xs text-warning">
+                      Atribuir treino →
+                    </div>
+                  </div>
+                  <DumbbellIcon className="h-4 w-4 text-warning" />
+                </Link>
+              </li>
+            ))}
+            {studentsWithoutWorkout.length > 3 && (
+              <Link
+                href="/dashboard/students"
+                className="block rounded-lg p-2 text-center text-xs font-medium text-warning hover:underline"
+              >
+                Ver todos os {studentsWithoutWorkout.length} alunos sem treino →
+              </Link>
+            )}
+          </ul>
+        </section>
+      )}
+
+      {/* Leads pendentes */}
+      {pendingLeads.length > 0 && (
+        <section>
+          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink-dim">
+            Leads novos pra aprovar
+          </h2>
+          <ul className="space-y-2">
+            {pendingLeads.slice(0, 3).map((s) => (
+              <li key={s.id}>
+                <Link
+                  href={`/dashboard/leads/${s.id}`}
+                  className="flex items-center gap-3 rounded-xl border border-accent/30 bg-accent/5 p-3 transition active:scale-[0.99] hover:border-accent/60"
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-bg-elevated">
+                    <UserIcon className="h-5 w-5 text-accent" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-semibold">
+                      {s.full_name}
+                    </div>
+                    <div className="text-xs text-accent">
+                      {s.anamnesis_submitted_at
+                        ? "Anamnese preenchida"
+                        : "Aguardando anamnese"}{" "}
+                      →
+                    </div>
+                  </div>
+                  <ArrowRightIcon className="h-4 w-4 text-accent" />
+                </Link>
+              </li>
+            ))}
+            {pendingLeads.length > 3 && (
+              <Link
+                href="/dashboard/leads"
+                className="block rounded-lg p-2 text-center text-xs font-medium text-accent hover:underline"
+              >
+                Ver todos os {pendingLeads.length} leads →
+              </Link>
+            )}
+          </ul>
+        </section>
+      )}
+
+      {/* Pagina publica */}
+      <section className="card">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-dim">
+          Sua página de captação
+        </h2>
+        <p className="mt-1 text-xs text-ink-muted">
+          Compartilhe pra captar novos alunos.
+        </p>
+        <div className="mt-3 flex items-center gap-2">
+          <code className="flex-1 truncate rounded-lg bg-bg-surface px-3 py-2 text-xs text-accent">
+            {publicUrl}
+          </code>
+          <Link
+            href={`/pt/${trainer.slug}`}
+            target="_blank"
+            className="btn-secondary inline-flex shrink-0 items-center gap-1.5 text-sm"
+          >
+            <ExternalLinkIcon className="h-4 w-4" />
+            Abrir
+          </Link>
+        </div>
+      </section>
+
+      {/* Atalho perfil */}
+      <Link
+        href="/dashboard/profile"
+        className="block rounded-xl border border-border bg-bg-card p-3 text-center text-sm text-ink-muted transition hover:border-accent/40 hover:text-ink"
+      >
+        Editar perfil →
+      </Link>
     </div>
   );
 }
