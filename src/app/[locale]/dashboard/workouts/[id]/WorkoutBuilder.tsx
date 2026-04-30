@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
-import { CloseIcon, PlayIcon } from "@/components/icons";
+import { CloseIcon, PlayIcon, PlusIcon } from "@/components/icons";
 import {
   addBlock,
   updateBlock,
@@ -10,6 +10,7 @@ import {
   addExerciseToBlock,
   updateWorkoutExercise,
   deleteWorkoutExercise,
+  createCustomExercise,
 } from "./actions";
 
 type Exercise = {
@@ -56,7 +57,14 @@ export function WorkoutBuilder({
   const t = useTranslations();
   const [blocks, setBlocks] = useState<Block[]>(initialBlocks);
   const [pickerForBlock, setPickerForBlock] = useState<string | null>(null);
+  const [library, setLibrary] = useState<Exercise[]>(exerciseLibrary);
   const [, startTransition] = useTransition();
+
+  // Quando user cria exercicio custom no Picker, adiciona na lib local
+  // sem precisar recarregar a pagina inteira.
+  const onCustomExerciseCreated = (ex: Exercise) => {
+    setLibrary((prev) => [ex, ...prev]);
+  };
 
   const onAddBlock = () =>
     startTransition(async () => {
@@ -290,9 +298,10 @@ export function WorkoutBuilder({
 
       {pickerForBlock && (
         <ExercisePicker
-          exercises={exerciseLibrary}
+          exercises={library}
           onSelect={(exId) => onAddExercise(pickerForBlock, exId)}
           onClose={() => setPickerForBlock(null)}
+          onCustomCreated={onCustomExerciseCreated}
         />
       )}
     </div>
@@ -351,14 +360,17 @@ function ExercisePicker({
   exercises,
   onSelect,
   onClose,
+  onCustomCreated,
 }: {
   exercises: Exercise[];
   onSelect: (id: string) => void;
   onClose: () => void;
+  onCustomCreated: (ex: Exercise) => void;
 }) {
   const t = useTranslations();
   const [search, setSearch] = useState("");
   const [muscle, setMuscle] = useState<string>("");
+  const [creating, setCreating] = useState(false);
 
   const muscles = Array.from(new Set(exercises.map((e) => e.muscle_group))).sort();
 
@@ -394,13 +406,22 @@ function ExercisePicker({
         </div>
 
         <div className="mt-3 space-y-2">
+          {/* Botao destacado pra criar exercicio que nao existe */}
+          <button
+            type="button"
+            onClick={() => setCreating(true)}
+            className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-accent/40 bg-accent/5 px-3 py-2.5 text-sm font-semibold text-accent transition hover:border-accent/70 hover:bg-accent/10 active:scale-[0.99]"
+          >
+            <PlusIcon className="h-4 w-4" />
+            Criar exercício novo
+          </button>
+
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t("Workouts.exercise_picker_search")}
             className="input"
-            autoFocus
           />
           <div className="flex flex-wrap gap-1">
             <button
@@ -428,6 +449,19 @@ function ExercisePicker({
             ))}
           </div>
         </div>
+
+        {creating && (
+          <CustomExerciseForm
+            defaultMuscle={muscle || undefined}
+            onCancel={() => setCreating(false)}
+            onCreated={(ex) => {
+              onCustomCreated(ex);
+              setCreating(false);
+              // ja seleciona pra adicionar ao bloco
+              onSelect(ex.id);
+            }}
+          />
+        )}
 
         <div className="mt-3 flex-1 overflow-y-auto scrollbar-thin">
           {filtered.length === 0 ? (
@@ -459,5 +493,168 @@ function ExercisePicker({
         </div>
       </div>
     </div>
+  );
+}
+
+const MUSCLE_OPTIONS = [
+  "Peito",
+  "Costas",
+  "Pernas",
+  "Glúteos",
+  "Ombros",
+  "Bíceps",
+  "Tríceps",
+  "Abdômen",
+  "Trapézio",
+  "Antebraço",
+  "Cardio",
+  "Corpo todo",
+];
+
+function CustomExerciseForm({
+  defaultMuscle,
+  onCancel,
+  onCreated,
+}: {
+  defaultMuscle?: string;
+  onCancel: () => void;
+  onCreated: (ex: Exercise) => void;
+}) {
+  const [name, setName] = useState("");
+  const [muscle, setMuscle] = useState(defaultMuscle ?? "Peito");
+  const [equipment, setEquipment] = useState("");
+  const [level, setLevel] = useState("intermediario");
+  const [notes, setNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (submitting) return;
+    setError(null);
+    if (!name.trim()) {
+      setError("Informe o nome do exercício.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const r = await createCustomExercise({
+        name: name.trim(),
+        muscle_group: muscle,
+        equipment: equipment.trim() || undefined,
+        level,
+        notes: notes.trim() || undefined,
+      });
+      if (!r.ok) {
+        setError(r.error);
+        setSubmitting(false);
+        return;
+      }
+      onCreated(r.exercise as Exercise);
+    } catch (e) {
+      setError((e as Error).message);
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <form
+      onSubmit={onSubmit}
+      className="mt-3 space-y-3 rounded-xl border border-accent/40 bg-accent/5 p-3"
+    >
+      <div className="text-xs font-semibold uppercase tracking-wider text-accent">
+        Novo exercício
+      </div>
+
+      <div>
+        <label className="label">Nome *</label>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Ex.: Supino máquina convergente"
+          className="input h-11"
+          autoFocus
+          maxLength={100}
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className="label">Grupo muscular *</label>
+          <select
+            value={muscle}
+            onChange={(e) => setMuscle(e.target.value)}
+            className="input h-11"
+          >
+            {MUSCLE_OPTIONS.map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="label">Nível</label>
+          <select
+            value={level}
+            onChange={(e) => setLevel(e.target.value)}
+            className="input h-11"
+          >
+            <option value="iniciante">Iniciante</option>
+            <option value="intermediario">Intermediário</option>
+            <option value="avancado">Avançado</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label className="label">Equipamento</label>
+        <input
+          type="text"
+          value={equipment}
+          onChange={(e) => setEquipment(e.target.value)}
+          placeholder="Ex.: Máquina, Halteres, Polia corda"
+          className="input h-11"
+          maxLength={60}
+        />
+      </div>
+
+      <div>
+        <label className="label">Notas técnicas (opcional)</label>
+        <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          rows={2}
+          placeholder="Dicas de execução, observações..."
+          className="input"
+          maxLength={500}
+        />
+      </div>
+
+      {error && (
+        <div className="rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-xs text-danger">
+          {error}
+        </div>
+      )}
+
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={submitting}
+          className="btn-ghost flex-1"
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          disabled={submitting}
+          className="btn-primary flex-1"
+        >
+          {submitting ? "Criando..." : "Criar e adicionar"}
+        </button>
+      </div>
+    </form>
   );
 }
