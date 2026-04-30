@@ -43,7 +43,7 @@ export default async function DashboardLayout({
     .maybeSingle();
 
   return (
-    <div className="flex min-h-screen bg-bg">
+    <div className="flex min-h-dvh bg-bg">
       <aside className="hidden w-64 shrink-0 border-r border-border bg-bg-surface md:flex md:flex-col">
         <div className="border-b border-border p-6">
           <Link

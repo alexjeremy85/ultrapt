@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { saveProfile } from "./actions";
 import { TestimonialsEditor } from "./TestimonialsEditor";
 import { HighlightsEditor } from "./HighlightsEditor";
+import { SubmitButton } from "@/components/SubmitButton";
 
 type Trainer = {
   id: string;
@@ -450,13 +451,13 @@ export function ProfileForm({
         <TestimonialsEditor initial={trainer.testimonials ?? []} />
       </Section>
 
-      {/* Botão único de salvar tudo */}
-      <button
-        type="submit"
+      {/* Botão único de salvar tudo — mostra spinner durante submit */}
+      <SubmitButton
+        pendingText="Salvando..."
         className="btn-primary h-12 w-full text-base md:ml-auto md:flex md:w-auto md:px-8"
       >
         Salvar tudo
-      </button>
+      </SubmitButton>
     </form>
   );
 }

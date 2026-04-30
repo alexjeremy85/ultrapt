@@ -10,7 +10,13 @@ export function MobileTopBar({
   photoUrl: string | null;
 }) {
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-border bg-bg-surface/95 px-4 py-3 backdrop-blur md:hidden">
+    <header
+      className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-border bg-bg-surface/95 px-4 backdrop-blur md:hidden"
+      style={{
+        paddingTop: "calc(env(safe-area-inset-top) + 0.75rem)",
+        paddingBottom: "0.75rem",
+      }}
+    >
       <Link href="/dashboard" className="flex items-center gap-2 text-base font-bold">
         <Logomark />
         Ultra PT

@@ -10,12 +10,18 @@
     height: 100%;
     background: #0a0a0a;
     color: #f5f5f5;
+    /* Remove o flash azul de tap em iOS Safari */
+    -webkit-tap-highlight-color: transparent;
+    /* Evita rubber-band scroll horizontal acidental */
+    overscroll-behavior-x: none;
   }
 
   body {
     font-family: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
     font-feature-settings: "cv11", "ss01";
     -webkit-font-smoothing: antialiased;
+    /* Evita ajuste automatico de fonte do iOS no rotate */
+    -webkit-text-size-adjust: 100%;
   }
 
   ::selection {
@@ -26,6 +32,23 @@
   *:focus-visible {
     outline: 2px solid #ff6b00;
     outline-offset: 2px;
+  }
+
+  /* Resposta tatil instantanea: removeo delay de 300ms do iOS Safari */
+  button:not(:disabled),
+  a {
+    touch-action: manipulation;
+  }
+
+  /* Animacoes globais reutilizaveis */
+  @keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 }
 
@@ -39,19 +62,19 @@
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-5 py-2.5 font-semibold text-black transition hover:bg-accent-hover hover:shadow-glow-sm active:translate-y-px;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-5 py-2.5 font-semibold text-black transition-all duration-150 hover:bg-accent-hover hover:shadow-glow-sm active:scale-[0.97] active:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-border-strong bg-bg-card px-5 py-2.5 font-medium text-ink transition hover:bg-bg-elevated hover:border-accent;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-border-strong bg-bg-card px-5 py-2.5 font-medium text-ink transition-all duration-150 hover:bg-bg-elevated hover:border-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 font-medium text-ink-muted transition hover:bg-bg-card hover:text-ink;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 font-medium text-ink-muted transition-all duration-150 hover:bg-bg-card hover:text-ink active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .btn-danger {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-danger/40 px-4 py-2 font-medium text-danger transition hover:bg-danger/10;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-danger/40 px-4 py-2 font-medium text-danger transition-all duration-150 hover:bg-danger/10 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .card {
