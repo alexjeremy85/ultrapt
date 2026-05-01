@@ -10,6 +10,7 @@ export async function signup(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const fullName = String(formData.get("full_name") ?? "").trim();
+  const termsAccepted = formData.get("terms_accepted") === "1";
   const locale = await getLocale();
   const t = await getTranslations({ locale });
 
@@ -27,6 +28,13 @@ export async function signup(formData: FormData) {
     });
   }
 
+  if (!termsAccepted) {
+    redirect({
+      href: `/signup?error=${encodeURIComponent("Voce precisa aceitar os termos de uso para criar a conta.")}`,
+      locale,
+    });
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -36,6 +44,8 @@ export async function signup(formData: FormData) {
         full_name: fullName,
         role: "trainer",
         locale,
+        terms_accepted_at: new Date().toISOString(),
+        terms_version: "2026-05-01",
       },
       emailRedirectTo: `${getSiteUrl()}/auth/callback`,
     },

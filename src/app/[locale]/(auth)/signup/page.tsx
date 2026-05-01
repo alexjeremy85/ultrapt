@@ -68,6 +68,26 @@ export default async function SignupPage({
           />
           <p className="hint">{t("Auth.field_password_hint")}</p>
         </div>
+        <label className="flex items-start gap-2 text-sm text-ink-muted">
+          <input
+            name="terms_accepted"
+            type="checkbox"
+            required
+            value="1"
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-border accent-accent"
+          />
+          <span>
+            Li e aceito os{" "}
+            <Link
+              href="/termos"
+              target="_blank"
+              className="font-medium text-accent hover:text-accent-hover underline"
+            >
+              termos de uso
+            </Link>
+            .
+          </span>
+        </label>
         <button
           type="submit"
           className="btn-primary inline-flex w-full items-center justify-center gap-2"
