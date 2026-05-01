@@ -39,6 +39,11 @@ export function MobileBottomNav({
 }) {
   const pathname = usePathname();
 
+  // Esconder em paginas que devem ser limpas (PDF/impressao)
+  if (pathname.includes("/imprimir") || pathname.includes("/print")) {
+    return null;
+  }
+
   function getBadge(key: Item["badgeKey"]): number {
     if (key === "students") return unreadStudents;
     return 0;
