@@ -1,9 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getSiteUrl } from "@/lib/site-url";
 
 export async function signup(formData: FormData) {
@@ -62,6 +64,28 @@ export async function signup(formData: FormData) {
       href: `/signup?error=${encodeURIComponent(error.message)}`,
       locale,
     });
+  }
+
+  // Captura origem do trafego e grava no trainer (criado pelo trigger).
+  // Usa service_role pra funcionar mesmo antes da confirmacao de email.
+  if (data.user?.id) {
+    try {
+      const h = await headers();
+      const referer = h.get("referer") ?? null;
+      const userAgent = h.get("user-agent") ?? null;
+      const admin = createAdminClient();
+      await admin
+        .from("trainers")
+        .update({
+          signup_referer: referer,
+          signup_user_agent: userAgent,
+          terms_accepted_at: new Date().toISOString(),
+          terms_version: "2026-05-01",
+        })
+        .eq("id", data.user.id);
+    } catch (e) {
+      console.error("[signup] failed to persist signup telemetry", e);
+    }
   }
 
   if (data.session) {
