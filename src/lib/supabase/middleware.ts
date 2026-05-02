@@ -46,11 +46,26 @@ export async function updateSession(request: NextRequest) {
   const isAuthPage = path.startsWith("/login") || path.startsWith("/signup");
   const isAppRoute = path.startsWith("/dashboard");
   const isBillingRoute = path.startsWith("/dashboard/billing");
+  const isAdminRoute = path.startsWith("/admin");
 
-  if (!user && isAppRoute) {
+  if (!user && (isAppRoute || isAdminRoute)) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
+  }
+
+  // Guard de admin no middleware (camada externa, antes do RSC).
+  if (isAdminRoute) {
+    const adminId = process.env.ADMIN_USER_ID;
+    if (!user || !adminId || user.id !== adminId) {
+      const url = request.nextUrl.clone();
+      const localeMatch = request.nextUrl.pathname.match(
+        /^\/([a-z]{2}(-[A-Z]{2})?)\//
+      );
+      const localePrefix = localeMatch ? `/${localeMatch[1]}` : "";
+      url.pathname = `${localePrefix}/dashboard`;
+      return NextResponse.redirect(url);
+    }
   }
 
   if (user && isAuthPage) {
