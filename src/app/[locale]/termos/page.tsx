@@ -33,7 +33,7 @@ export default async function TermosPage({
           </p>
           <p className="mt-2">
             <strong>CONTRATANTE:</strong> o(a) profissional de Educação Física que aderir aos
-            presentes Termos por meio do cadastro e do aceite eletrônico no sítio ultrapt.com,
+            presentes Termos por meio do cadastro e do aceite eletrônico no sítio ultrapt.com.br,
             qualificado(a) pelos dados informados no momento do cadastro, doravante denominado(a)
             simplesmente &quot;PERSONAL TRAINER&quot;.
           </p>
@@ -55,7 +55,7 @@ export default async function TermosPage({
           </p>
           <p className="mt-2">1.2. A plataforma compreende, na presente data, as seguintes funcionalidades:</p>
           <ul className="ml-5 mt-1 list-disc space-y-1">
-            <li>página pública personalizada do PERSONAL TRAINER no formato ultrapt.com/pt/{`{slug}`}, com templates configuráveis, biografia, número de CREF, especialidades, descrição de serviços, depoimentos, contatos e botão direto para WhatsApp;</li>
+            <li>página pública personalizada do PERSONAL TRAINER no formato ultrapt.com.br/pt/{`{slug}`}, com templates configuráveis, biografia, número de CREF, especialidades, descrição de serviços, depoimentos, contatos e botão direto para WhatsApp;</li>
             <li>formulário público de captação de leads e questionário público de anamnese;</li>
             <li>módulo de gestão de alunos, com cadastro individual, login por código de acesso, visualização em cards, indicação de mensagens não lidas e tela de detalhe por aluno;</li>
             <li>construtor de treinos por blocos, com configuração de séries, repetições, carga, descanso, cadência e observações, biblioteca de exercícios pré-cadastrados com vídeos demonstrativos e templates de treino prontos;</li>
