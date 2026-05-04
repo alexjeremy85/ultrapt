@@ -108,6 +108,28 @@ export default async function DashboardPage({
         </p>
       </div>
 
+      {(studentsCount ?? 0) === 0 && (
+        <Link
+          href="/dashboard/onboarding"
+          className="block rounded-xl border-2 border-accent bg-accent/10 p-4 transition active:scale-[0.99] hover:bg-accent/15"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-accent">
+                Comece aqui
+              </p>
+              <h2 className="mt-1 text-base font-bold">
+                Do zero ao primeiro PDF em 5 minutos
+              </h2>
+              <p className="mt-1 text-xs text-ink-muted">
+                Cadastre o primeiro aluno + treino. Te levo direto pro construtor.
+              </p>
+            </div>
+            <ArrowRightIcon className="h-5 w-5 shrink-0 text-accent" />
+          </div>
+        </Link>
+      )}
+
       {/* Acoes rapidas top */}
       <div className="flex gap-2">
         <Link
