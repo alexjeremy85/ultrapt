@@ -6,6 +6,7 @@ import { getSiteUrl } from "@/lib/site-url";
 import { ChatIcon, ArrowLeftIcon } from "@/components/icons";
 import { AssignWorkoutForm } from "./AssignWorkoutForm";
 import { CopyLinkButton } from "./CopyLinkButton";
+import { WhatsAppWorkoutButton } from "./WhatsAppWorkoutButton";
 
 export default async function StudentDetailPage({
   params,
@@ -158,13 +159,21 @@ export default async function StudentDetailPage({
               </div>
             </div>
           </div>
-          <Link
-            href={`/dashboard/students/${student.id}/chat`}
-            className="btn-secondary inline-flex shrink-0 items-center gap-1.5 text-sm"
-          >
-            <ChatIcon className="h-4 w-4" />
-            Conversar
-          </Link>
+          <div className="flex shrink-0 flex-col items-end gap-2">
+            <Link
+              href={`/dashboard/students/${student.id}/chat`}
+              className="btn-secondary inline-flex items-center gap-1.5 text-sm"
+            >
+              <ChatIcon className="h-4 w-4" />
+              Conversar
+            </Link>
+            <Link
+              href={`/dashboard/students/${student.id}/avaliacoes`}
+              className="btn-ghost text-sm"
+            >
+              Avaliação física
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -242,13 +251,18 @@ export default async function StudentDetailPage({
                     {a.workout.goal ?? ""} · {a.workout.level ?? ""}
                   </div>
                 </div>
-                <div className="flex shrink-0 gap-2">
+                <div className="flex shrink-0 flex-wrap gap-2">
+                  <WhatsAppWorkoutButton
+                    assignmentId={a.id}
+                    phone={student.phone ?? null}
+                    studentName={student.full_name}
+                  />
                   <Link
                     href={`/dashboard/students/${student.id}/treino/${a.id}/imprimir`}
                     target="_blank"
                     className="btn-secondary text-sm"
                   >
-                    Imprimir / PDF
+                    PDF
                   </Link>
                   <Link
                     href={`/dashboard/workouts/${a.workout.id}`}

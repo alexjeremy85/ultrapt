@@ -7,10 +7,13 @@ import { WorkoutBuilder } from "./WorkoutBuilder";
 
 export default async function WorkoutEditPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; id: string }>;
+  searchParams: Promise<{ onboarding?: string; student?: string }>;
 }) {
   const { locale, id } = await params;
+  const { onboarding, student: studentId } = await searchParams;
   setRequestLocale(locale);
   const t = await getTranslations();
 
@@ -64,6 +67,27 @@ export default async function WorkoutEditPage({
           </div>
         </div>
       </div>
+
+      {onboarding === "1" && (
+        <div className="rounded-xl border-2 border-accent bg-accent/10 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-accent">
+            Passo 2 de 3
+          </p>
+          <h2 className="mt-1 text-base font-bold">Adicione exercícios ao bloco</h2>
+          <p className="mt-1 text-sm text-ink-muted">
+            Escolha 4-6 exercícios pra começar. Quando terminar, clique em &quot;Voltar&quot; e
+            no aluno você gera o PDF e manda pelo WhatsApp.
+          </p>
+          {studentId && (
+            <Link
+              href={`/dashboard/students/${studentId}`}
+              className="mt-3 inline-flex text-xs font-semibold text-accent hover:text-accent-hover"
+            >
+              Ir pro aluno (depois de adicionar exercícios) →
+            </Link>
+          )}
+        </div>
+      )}
 
       <WorkoutBuilder
         workoutId={workout.id}
