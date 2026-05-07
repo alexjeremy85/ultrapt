@@ -37,3 +37,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# session migration artifacts (local only)
+MIGRATION_PROTOCOL.md
