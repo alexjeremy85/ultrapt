@@ -451,30 +451,52 @@ function CheckLine({ children }: { children: React.ReactNode }) {
 }
 
 function Pricing() {
-  const order: PlanId[] = ["starter", "pro", "scale"];
-  const descriptions: Record<PlanId, string> = {
-    starter: "Pra quem está começando.",
-    pro: "Pra PT em crescimento.",
-    scale: "Pra PT consolidado.",
-  };
+  const order: Exclude<PlanId, "free">[] = ["solo", "pro", "escala"];
+  // TODO: trocar por contagem real de pioneiros quando aparecer o primeiro
+  const slots: Record<string, number> = { solo: 10, pro: 10, escala: 10 };
 
   return (
     <section id="pricing" className="mt-32 lg:mt-40">
       <div className="mx-auto max-w-2xl text-center">
         <SectionEyebrow>Preço transparente</SectionEyebrow>
         <h2 className="mt-4 text-4xl font-black tracking-tight md:text-5xl">
-          Um plano que cabe no seu mês.
+          Comece grátis. Cresce quando quiser.
         </h2>
         <p className="mt-5 text-lg text-ink-muted">
-          14 dias grátis sem cartão. Você só paga se quiser continuar.
-          Cancela quando quiser.
+          Plano Free pra sempre com até 2 alunos. Sem cartão, sem prazo.
+          Pioneiro: 10 vagas por plano com preço travado.
         </p>
       </div>
 
-      <div className="mt-14 grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="mx-auto mt-12 max-w-2xl rounded-2xl border border-border bg-bg-card p-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="text-xs font-bold uppercase tracking-[0.2em] text-ink-dim">
+              Free
+            </div>
+            <div className="mt-2 flex items-baseline gap-2">
+              <span className="text-3xl font-black">R$ 0</span>
+              <span className="text-sm text-ink-dim">pra sempre</span>
+            </div>
+            <p className="mt-1 text-sm text-ink-muted">
+              Até <strong className="text-ink">2 alunos</strong>. Página pública,
+              treino, PDF, anamnese, chat e avaliação Pollock. Sem cartão.
+            </p>
+          </div>
+          <Link href="/signup" className="btn-secondary shrink-0">
+            Começar grátis
+          </Link>
+        </div>
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
         {order.map((id) => {
           const p = PLANS[id];
+          if (!p.prices) return null;
           const isPro = id === "pro";
+          const cheio = p.prices.monthly;
+          const pio = p.prices.monthlyPioneiro;
+          const off = Math.round(((cheio - pio) / cheio) * 100);
           return (
             <div
               key={id}
@@ -494,16 +516,26 @@ function Pricing() {
                 {p.name}
               </div>
 
-              <div className="mt-4 flex items-baseline gap-1">
-                <span className="text-4xl font-black">R$ {p.price}</span>
-                <span className="text-sm text-ink-dim">/ mês</span>
+              <div className="mt-3">
+                <div className="inline-flex items-center gap-2 rounded-full bg-accent/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-accent">
+                  Pioneiro · {off}% off
+                </div>
               </div>
 
-              <p className="mt-2 text-sm text-ink-muted">
-                {descriptions[id]}
+              <div className="mt-3 text-sm text-ink-dim line-through">
+                R$ {cheio}/mês
+              </div>
+              <div className="flex items-baseline gap-1">
+                <span className="text-4xl font-black">R$ {pio}</span>
+                <span className="text-sm text-ink-dim">/ mês</span>
+              </div>
+              <p className="mt-1 text-xs text-ink-muted">
+                Restam <strong className="text-accent">{slots[id]} vagas</strong> por esse preço
               </p>
 
-              <ul className="mt-5 space-y-2 text-sm text-ink-muted">
+              <p className="mt-3 text-sm text-ink-muted">{p.desc}</p>
+
+              <ul className="mt-4 space-y-2 text-sm text-ink-muted">
                 <li className="flex items-start gap-2">
                   <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
                   <span>
@@ -518,15 +550,15 @@ function Pricing() {
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-                  <span>Anamnese, treinos e chat</span>
+                  <span>Avaliação física Pollock 7 dobras + PDF</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-                  <span>Cobrança Pix automática</span>
+                  <span>Anamnese, treinos, chat, WhatsApp Send</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-                  <span>Sem taxa de setup</span>
+                  <span>Preço travado enquanto for assinante</span>
                 </li>
               </ul>
 
@@ -536,7 +568,7 @@ function Pricing() {
                   isPro ? "btn-primary" : "btn-secondary"
                 }`}
               >
-                Começar grátis
+                Quero o Pioneiro
               </Link>
             </div>
           );
@@ -544,10 +576,10 @@ function Pricing() {
       </div>
 
       <p className="mt-6 text-center text-sm text-ink-dim">
-        Pix mensal recorrente · Sem fidelidade · Cancela a qualquer momento
+        Pioneiro trava o preço · Anual paga à vista com 40% off · Sem fidelidade
       </p>
 
-      {/* ROI math — reframe price as payback */}
+      {/* ROI math */}
       <div className="mx-auto mt-10 max-w-3xl rounded-2xl border border-border bg-bg-card p-6 md:p-8">
         <div className="flex items-start gap-4">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/15 text-accent">
@@ -562,9 +594,8 @@ function Pricing() {
             </h3>
             <p className="mt-3 text-sm leading-relaxed text-ink-muted">
               Personal cobra entre <strong className="text-ink">R$ 200 e R$ 500</strong>{" "}
-              por aluno/mês. O plano Pro custa <strong className="text-ink">R$ 119</strong>.
-              Captou 1 aluno via sua página? O Ultra PT já se pagou com sobra.
-              Captou 2? Você está lucrando com o sistema.
+              por aluno/mês. O plano Pro Pioneiro custa <strong className="text-ink">R$ 39</strong>.
+              Captou 1 aluno via sua página? O Ultra PT já se pagou várias vezes.
             </p>
           </div>
         </div>
@@ -598,14 +629,13 @@ function FinalCta({ ctaSignup }: { ctaSignup: string }) {
           <div className="mx-auto mt-6 max-w-xl">
             <div className="rounded-2xl border border-accent/40 bg-bg-surface px-5 py-4 text-left">
               <div className="flex items-baseline gap-2">
-                <span className="text-sm text-ink-dim line-through">R$ 119</span>
-                <span className="text-3xl font-black text-accent">R$ 59</span>
+                <span className="text-sm text-ink-dim line-through">R$ 79</span>
+                <span className="text-3xl font-black text-accent">R$ 39</span>
                 <span className="text-sm text-ink-muted">/ mês</span>
               </div>
               <p className="mt-1 text-sm text-ink-muted">
-                <strong className="text-ink">3 primeiros meses pela metade.</strong>{" "}
-                Depois R$ 119/mês <strong className="text-ink">congelado pra sempre</strong> —
-                seu preço de fundador, sem reajuste.
+                <strong className="text-ink">Pioneiro Pro:</strong> preço travado vitalício pros
+                primeiros 10 que entrarem. Antes do reajuste pra R$ 79.
               </p>
             </div>
           </div>

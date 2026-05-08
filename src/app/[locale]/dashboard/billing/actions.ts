@@ -2,7 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { PLANS, type PlanId } from "@/lib/plans";
+import {
+  PLANS,
+  PIONEIRO_VAGAS_POR_PLANO,
+  priceFor,
+  type PlanId,
+  type Cycle,
+} from "@/lib/plans";
 import {
   asaasCreateCustomer,
   asaasFindCustomerByCpf,
@@ -12,6 +18,7 @@ import {
   asaasGetPaymentPixQr,
   asaasGetPayment,
   asaasGetSubscription,
+  asaasCreatePayment,
 } from "@/lib/asaas";
 import { validateVoucher } from "@/lib/vouchers";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -72,10 +79,14 @@ export type SubscriptionDetails = {
 
 export async function checkVoucher(
   code: string,
-  planId: PlanId
+  planId: PlanId,
+  cycle: Cycle = "monthly",
+  isPioneiro = false
 ): Promise<VoucherCheckResult> {
   if (!PLANS[planId]) return { ok: false, reason: "Plano invalido" };
-  const result = await validateVoucher(code, PLANS[planId].price);
+  const base = priceFor(planId, cycle, isPioneiro);
+  if (base <= 0) return { ok: false, reason: "Plano sem preco" };
+  const result = await validateVoucher(code, base);
   if (!result.ok) return { ok: false, reason: result.reason };
   return {
     ok: true,
@@ -85,113 +96,73 @@ export async function checkVoucher(
   };
 }
 
+/**
+ * Conta quantas vagas Pioneiro restam por plano. Lê via service_role
+ * porque RLS publico nao expoe is_pioneiro.
+ */
+export async function countPioneiroSlots(): Promise<
+  Record<Exclude<PlanId, "free">, number>
+> {
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("trainers")
+    .select("subscription_plan")
+    .eq("is_pioneiro", true);
+  const used: Record<string, number> = { solo: 0, pro: 0, escala: 0 };
+  (data ?? []).forEach((row: { subscription_plan: string | null }) => {
+    if (row.subscription_plan && used[row.subscription_plan] !== undefined) {
+      used[row.subscription_plan]++;
+    }
+  });
+  return {
+    solo: Math.max(0, PIONEIRO_VAGAS_POR_PLANO - used.solo),
+    pro: Math.max(0, PIONEIRO_VAGAS_POR_PLANO - used.pro),
+    escala: Math.max(0, PIONEIRO_VAGAS_POR_PLANO - used.escala),
+  };
+}
+
 export type PartnerVoucherResult =
-  | { ok: true; daysExtended: number; newTrialEndsAt: string }
+  | { ok: true; message: string }
   | { ok: false; reason: string };
 
 /**
- * Aplica cupom de parceiro: estende trial_ends_at em N dias.
- * Diferente do voucher de desconto, nao envolve Asaas.
- * So permitido durante trial (impede uso depois de assinar).
+ * Cupom de parceiro foi descontinuado no modelo Free Tier. O Free agora e
+ * para sempre com ate 2 alunos — nao ha trial pra estender. Retorna mensagem
+ * direcionando o usuario pra usar cupom de desconto ao assinar.
  */
 export async function applyPartnerVoucher(
-  code: string
+  _code: string
 ): Promise<PartnerVoucherResult> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false, reason: "Nao autenticado" };
-
-  const cleanCode = String(code ?? "").trim().toUpperCase();
-  if (!cleanCode) return { ok: false, reason: "Codigo vazio" };
-
-  const { data: trainer } = await supabase
-    .from("trainers")
-    .select("subscription_status, trial_ends_at")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (!trainer) return { ok: false, reason: "Trainer nao encontrado" };
-  if (trainer.subscription_status !== "trialing") {
-    return {
-      ok: false,
-      reason: "Cupom de parceiro so pode ser usado durante o trial",
-    };
-  }
-
-  const admin = createAdminClient();
-  const { data: claim, error: claimError } = await admin.rpc("claim_voucher", {
-    p_trainer_id: user.id,
-    p_code: cleanCode,
-  });
-  if (claimError) {
-    console.error("[partner-voucher] claim falhou", claimError);
-    return { ok: false, reason: "Erro ao aplicar cupom" };
-  }
-  const claimRow = Array.isArray(claim) ? claim[0] : claim;
-  if (!claimRow?.ok) {
-    return { ok: false, reason: claimRow?.reason ?? "Cupom invalido" };
-  }
-  if (claimRow.voucher_type !== "extend_trial_days") {
-    // Reverte: o claim ja marcou voucher_used. Pra MVP, retorna erro
-    // claro; usuario deve usar o campo correto (voucher de desconto vs
-    // voucher de parceiro).
-    console.warn("[partner-voucher] tipo errado", claimRow.voucher_type);
-    return {
-      ok: false,
-      reason: "Este codigo nao e de parceiro. Use o campo de cupom de desconto.",
-    };
-  }
-
-  // Estende a partir do MAIOR entre now() e trial_ends_at atual,
-  // pra evitar que um cupom encurte trial existente.
-  const days = Number(claimRow.voucher_value);
-  const currentTrialEnd = trainer.trial_ends_at
-    ? new Date(trainer.trial_ends_at)
-    : new Date();
-  const base = currentTrialEnd > new Date() ? currentTrialEnd : new Date();
-  const newTrialEnd = new Date(base.getTime() + days * 24 * 60 * 60 * 1000);
-
-  const { error: updateError } = await admin
-    .from("trainers")
-    .update({ trial_ends_at: newTrialEnd.toISOString() })
-    .eq("id", user.id);
-  if (updateError) {
-    console.error("[partner-voucher] update trial_ends_at falhou", updateError);
-    return { ok: false, reason: "Erro ao estender trial" };
-  }
-
-  console.log("[partner-voucher] aplicado", {
-    trainerId: user.id,
-    code: cleanCode,
-    days,
-    newTrialEndsAt: newTrialEnd.toISOString(),
-  });
-
-  revalidatePath("/[locale]/dashboard", "layout");
-
+  void _code;
   return {
-    ok: true,
-    daysExtended: days,
-    newTrialEndsAt: newTrialEnd.toISOString(),
+    ok: false,
+    reason:
+      "Cupom de parceiro indisponivel. O plano Free agora e pra sempre — use o cupom de desconto ao assinar um plano pago.",
   };
 }
 
 /**
- * Cria a subscription Pix e retorna QR code + copia e cola pra UI embutida.
- * O client faz polling em getPaymentStatus ate confirmar.
+ * Cria a cobranca via Asaas e retorna o QR Pix pra UI embutida.
+ * - Mensal: cria subscription com cycle MONTHLY (cobranca recorrente)
+ * - Anual: cria payment unico (sem renovacao automatica)
+ * Pioneiro: bloqueia se nao houver vagas pro plano.
  */
 export async function startSubscription(input: {
   planId: PlanId;
+  cycle?: Cycle;
+  isPioneiro?: boolean;
   cpf: string;
   voucherCode?: string;
 }): Promise<StartSubscriptionResult> {
   const planId = input.planId;
+  const cycle: Cycle = input.cycle ?? "monthly";
+  const wantsPioneiro = !!input.isPioneiro;
   const cpfInput = String(input.cpf ?? "").replace(/\D/g, "");
   const voucherCode = String(input.voucherCode ?? "").trim();
 
-  if (!PLANS[planId]) return { ok: false, reason: "Plano invalido" };
+  if (!PLANS[planId] || planId === "free") {
+    return { ok: false, reason: "Plano invalido" };
+  }
 
   const supabase = await createClient();
   const {
@@ -211,7 +182,18 @@ export async function startSubscription(input: {
   if (!cpf) return { ok: false, reason: "Informe seu CPF para continuar." };
   if (!isValidCpf(cpf)) return { ok: false, reason: "CPF invalido." };
 
-  const basePrice = PLANS[planId].price;
+  // Trava de vagas Pioneiro
+  let isPioneiro = wantsPioneiro;
+  if (isPioneiro) {
+    const slots = await countPioneiroSlots();
+    const remaining =
+      slots[planId as Exclude<PlanId, "free">] ?? 0;
+    if (remaining <= 0) {
+      isPioneiro = false; // sem vagas — cai pra preco cheio em vez de bloquear
+    }
+  }
+
+  const basePrice = priceFor(planId, cycle, isPioneiro);
   let finalPrice = basePrice;
   let voucherCodeUsed: string | null = null;
 
@@ -251,31 +233,53 @@ export async function startSubscription(input: {
       }
     }
 
-    const sub = await asaasCreateSubscription({
-      customer: customerId!,
-      billingType: "PIX",
-      value: finalPrice,
-      nextDueDate: todayDate(),
-      cycle: "MONTHLY",
-      description: voucherCodeUsed
-        ? `Ultra PT - Plano ${PLANS[planId].name} (cupom ${voucherCodeUsed})`
-        : `Ultra PT - Plano ${PLANS[planId].name}`,
-      externalReference: user.id,
-    });
-
     let paymentId: string | null = null;
-    for (let i = 0; i < 12 && !paymentId; i++) {
-      try {
-        const payments = await asaasListSubscriptionPayments(sub.id);
-        const first = payments.data?.[0];
-        if (first?.id) {
-          paymentId = first.id;
-          break;
+    let subscriptionId: string | null = null;
+
+    const planLabel = PLANS[planId].name;
+    const cycleLabel = cycle === "annual" ? "Anual" : "Mensal";
+    const pioLabel = isPioneiro ? " · Pioneiro" : "";
+    const description = voucherCodeUsed
+      ? `Ultra PT - ${planLabel} ${cycleLabel}${pioLabel} (cupom ${voucherCodeUsed})`
+      : `Ultra PT - ${planLabel} ${cycleLabel}${pioLabel}`;
+
+    if (cycle === "annual") {
+      // Pagamento unico
+      const payment = await asaasCreatePayment({
+        customer: customerId!,
+        billingType: "PIX",
+        value: finalPrice,
+        dueDate: todayDate(),
+        description,
+        externalReference: user.id,
+      });
+      paymentId = payment.id;
+    } else {
+      // Mensal recorrente
+      const sub = await asaasCreateSubscription({
+        customer: customerId!,
+        billingType: "PIX",
+        value: finalPrice,
+        nextDueDate: todayDate(),
+        cycle: "MONTHLY",
+        description,
+        externalReference: user.id,
+      });
+      subscriptionId = sub.id;
+
+      for (let i = 0; i < 12 && !paymentId; i++) {
+        try {
+          const payments = await asaasListSubscriptionPayments(sub.id);
+          const first = payments.data?.[0];
+          if (first?.id) {
+            paymentId = first.id;
+            break;
+          }
+        } catch (e) {
+          console.warn("[billing] list payments retry", i, (e as Error).message);
         }
-      } catch (e) {
-        console.warn("[billing] list payments retry", i, (e as Error).message);
+        await new Promise((r) => setTimeout(r, 1500));
       }
-      await new Promise((r) => setTimeout(r, 1500));
     }
 
     if (!paymentId) {
@@ -291,10 +295,14 @@ export async function startSubscription(input: {
       .from("trainers")
       .update({
         asaas_customer_id: customerId,
-        asaas_subscription_id: sub.id,
+        asaas_subscription_id: subscriptionId,
         asaas_payment_id: paymentId,
         subscription_plan: planId,
         subscription_status: "pending_payment",
+        subscription_cycle: cycle,
+        subscription_value: finalPrice,
+        is_pioneiro: isPioneiro,
+        subscription_started_at: new Date().toISOString(),
         cpf,
       })
       .eq("id", user.id);

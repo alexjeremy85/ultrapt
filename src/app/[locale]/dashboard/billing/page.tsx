@@ -2,7 +2,7 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { type PlanId } from "@/lib/plans";
 import { BillingClient } from "./BillingClient";
-import { getSubscriptionDetails } from "./actions";
+import { getSubscriptionDetails, countPioneiroSlots } from "./actions";
 
 export default async function BillingPage({
   params,
@@ -24,27 +24,20 @@ export default async function BillingPage({
   const { data: trainer } = await supabase
     .from("trainers")
     .select(
-      "subscription_status, subscription_plan, trial_ends_at, asaas_customer_id, asaas_subscription_id, full_name, cpf, voucher_used"
+      "subscription_status, subscription_plan, asaas_customer_id, asaas_subscription_id, full_name, cpf, voucher_used"
     )
     .eq("id", user!.id)
     .single();
 
-  const status = trainer?.subscription_status ?? "trialing";
-  const currentPlan = (trainer?.subscription_plan ?? "starter") as PlanId;
-  const trialEnds = trainer?.trial_ends_at
-    ? new Date(trainer.trial_ends_at)
-    : null;
-  const daysLeft = trialEnds
-    ? Math.max(
-        0,
-        Math.ceil((trialEnds.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-      )
-    : 0;
+  const status = trainer?.subscription_status ?? "free";
+  const currentPlan = (trainer?.subscription_plan ?? "free") as PlanId;
 
   const subscriptionDetails =
     status === "active" || status === "past_due"
       ? await getSubscriptionDetails()
       : null;
+
+  const pioneiroSlots = await countPioneiroSlots();
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
@@ -67,10 +60,10 @@ export default async function BillingPage({
       <BillingClient
         status={status}
         currentPlan={currentPlan}
-        daysLeft={daysLeft}
         savedCpf={trainer?.cpf ?? null}
         voucherUsed={trainer?.voucher_used ?? null}
         subscriptionDetails={subscriptionDetails}
+        pioneiroSlots={pioneiroSlots}
       />
     </div>
   );

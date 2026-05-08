@@ -3,7 +3,13 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { PLANS, type PlanId } from "@/lib/plans";
+import {
+  PLANS,
+  PAID_PLAN_ORDER,
+  priceFor,
+  type PlanId,
+  type Cycle,
+} from "@/lib/plans";
 import {
   ClockIcon,
   TicketIcon,
@@ -17,11 +23,9 @@ import {
   getPaymentStatus,
   refreshPixQr,
   cancelSubscription,
-  applyPartnerVoucher,
   type VoucherCheckResult,
   type StartSubscriptionResult,
   type SubscriptionDetails,
-  type PartnerVoucherResult,
 } from "./actions";
 
 function maskCpf(value: string): string {
@@ -48,6 +52,8 @@ function formatDateBr(iso: string | null): string {
   });
 }
 
+type PaidPlanId = Exclude<PlanId, "free">;
+
 type PixData = {
   paymentId: string;
   qrImage: string;
@@ -60,46 +66,27 @@ type PixData = {
 export function BillingClient({
   status,
   currentPlan,
-  daysLeft,
   savedCpf,
   voucherUsed,
   subscriptionDetails,
+  pioneiroSlots,
 }: {
   status: string;
   currentPlan: PlanId;
-  daysLeft: number;
   savedCpf: string | null;
   voucherUsed: string | null;
   subscriptionDetails: SubscriptionDetails | null;
+  pioneiroSlots: Record<PaidPlanId, number>;
 }) {
   const t = useTranslations();
   const router = useRouter();
   const [cpf, setCpf] = useState(savedCpf ? maskCpf(savedCpf) : "");
   const [voucher, setVoucher] = useState("");
-  const [voucherSelectedPlan, setVoucherSelectedPlan] = useState<PlanId>("pro");
+  const [voucherSelectedPlan, setVoucherSelectedPlan] = useState<PaidPlanId>("pro");
   const [voucherResult, setVoucherResult] = useState<VoucherCheckResult | null>(null);
   const [validating, setValidating] = useState(false);
-  const [partnerCode, setPartnerCode] = useState("");
-  const [partnerResult, setPartnerResult] = useState<PartnerVoucherResult | null>(null);
-  const [partnerSubmitting, setPartnerSubmitting] = useState(false);
+  const [cycle, setCycle] = useState<Cycle>("monthly");
   const [isPending, startTransition] = useTransition();
-
-  async function onApplyPartnerVoucher() {
-    const code = partnerCode.trim().toUpperCase();
-    if (!code) return;
-    setPartnerSubmitting(true);
-    setPartnerResult(null);
-    try {
-      const r = await applyPartnerVoucher(code);
-      setPartnerResult(r);
-      if (r.ok) {
-        // Recarrega dados do trainer (trial_ends_at atualizado)
-        router.refresh();
-      }
-    } finally {
-      setPartnerSubmitting(false);
-    }
-  }
   const [submittingPlan, setSubmittingPlan] = useState<PlanId | null>(null);
   const [pixData, setPixData] = useState<PixData | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -107,7 +94,6 @@ export function BillingClient({
   const cpfDigits = cpf.replace(/\D/g, "");
   const cpfReady = cpfDigits.length === 11;
 
-  // Se tem cobrança pendente, busca o QR do Pix automaticamente
   useEffect(() => {
     if (status !== "pending_payment" || pixData) return;
     let cancelled = false;
@@ -129,7 +115,7 @@ export function BillingClient({
     };
   }, [status, pixData, currentPlan, subscriptionDetails?.value]);
 
-  const onValidateVoucher = async (planForCheck: PlanId) => {
+  const onValidateVoucher = async (planForCheck: PaidPlanId) => {
     const code = voucher.trim().toUpperCase();
     if (!code) {
       setVoucherResult(null);
@@ -137,21 +123,26 @@ export function BillingClient({
     }
     setValidating(true);
     setVoucherSelectedPlan(planForCheck);
-    const r = await checkVoucher(code, planForCheck);
+    const slots = pioneiroSlots[planForCheck] ?? 0;
+    const willBePioneiro = slots > 0;
+    const r = await checkVoucher(code, planForCheck, cycle, willBePioneiro);
     setVoucherResult(r);
     setValidating(false);
   };
 
-  const handleSubscribe = (planId: PlanId) => {
+  const handleSubscribe = (planId: PaidPlanId) => {
     if (!cpfReady) {
       setErrorMsg("Informe seu CPF antes de assinar.");
       return;
     }
     setErrorMsg(null);
     setSubmittingPlan(planId);
+    const wantsPioneiro = (pioneiroSlots[planId] ?? 0) > 0;
     startTransition(async () => {
       const result: StartSubscriptionResult = await startSubscription({
         planId,
+        cycle,
+        isPioneiro: wantsPioneiro,
         cpf: cpfDigits,
         voucherCode:
           voucherResult?.ok && voucher.trim()
@@ -179,7 +170,6 @@ export function BillingClient({
     voucher.trim().length > 0 &&
     voucherSelectedPlan != null;
 
-  // Quando status === "active" → mostra painel de assinatura
   if (status === "active" && subscriptionDetails) {
     return (
       <ActiveSubscriptionPanel
@@ -215,15 +205,15 @@ export function BillingClient({
             <div className="mt-1 text-2xl font-bold">
               {PLANS[currentPlan].name}
             </div>
+            {currentPlan === "free" && (
+              <p className="mt-1 text-sm text-ink-muted">
+                Até 2 alunos. Pra cadastrar mais ou desbloquear features extras,
+                escolhe um plano abaixo.
+              </p>
+            )}
           </div>
           <StatusBadge status={status} />
         </div>
-        {status === "trialing" && (
-          <p className="mt-3 text-sm text-ink-muted">
-            {t("Billing.trial_days_left", { days: daysLeft })} —{" "}
-            {t("Billing.trial_subtitle")}
-          </p>
-        )}
         {status === "pending_payment" && !pixData && (
           <div className="mt-4 rounded-xl border border-warning/40 bg-warning/10 p-4 text-sm">
             <div className="flex items-center gap-2 font-bold text-warning">
@@ -231,7 +221,7 @@ export function BillingClient({
               Sua assinatura está aguardando pagamento
             </div>
             <p className="mt-1 text-xs text-ink-muted">
-              Carregando QR Code do Pix...
+              Carregando QR Code do Pix…
             </p>
           </div>
         )}
@@ -271,6 +261,42 @@ export function BillingClient({
             </p>
           )}
         </div>
+      </div>
+
+      {/* Cycle toggle */}
+      <div className="card">
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-ink-dim">
+          Forma de pagamento
+        </h3>
+        <div className="mt-3 inline-flex rounded-lg border border-border bg-bg-surface p-1">
+          <button
+            type="button"
+            onClick={() => setCycle("monthly")}
+            className={`px-4 py-2 text-sm font-medium rounded-md transition ${
+              cycle === "monthly"
+                ? "bg-accent text-black"
+                : "text-ink-muted hover:text-ink"
+            }`}
+          >
+            Mensal
+          </button>
+          <button
+            type="button"
+            onClick={() => setCycle("annual")}
+            className={`px-4 py-2 text-sm font-medium rounded-md transition ${
+              cycle === "annual"
+                ? "bg-accent text-black"
+                : "text-ink-muted hover:text-ink"
+            }`}
+          >
+            Anual <span className="ml-1 text-[10px] opacity-80">−40%</span>
+          </button>
+        </div>
+        <p className="mt-2 text-xs text-ink-muted">
+          {cycle === "annual"
+            ? "Pagamento único de 12 meses, sem renovação automática."
+            : "Cobrança recorrente mensal via Pix. Cancela quando quiser."}
+        </p>
       </div>
 
       {/* Voucher */}
@@ -332,11 +358,8 @@ export function BillingClient({
               <div className="mt-1 text-ink">{voucherResult.description}</div>
             )}
             <div className="mt-2 text-ink">
-              No plano <strong>{PLANS[voucherSelectedPlan].name}</strong>:{" "}
-              <span className="line-through text-ink-dim">
-                {formatBrl(PLANS[voucherSelectedPlan].price)}
-              </span>{" "}
-              →{" "}
+              No plano <strong>{PLANS[voucherSelectedPlan].name}</strong>{" "}
+              ({cycle === "annual" ? "anual" : "mensal"}):{" "}
               <strong className="text-success">
                 {formatBrl(voucherResult.finalPrice)}
               </strong>{" "}
@@ -354,77 +377,22 @@ export function BillingClient({
         )}
       </div>
 
-      {/* Cupom de parceiro: estende trial. So aparece durante o trial e
-          se o trainer ainda nao usou nenhum cupom. */}
-      {status === "trialing" && !voucherUsed && (
-        <div className="card border-warning/40 bg-warning/5">
-          <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-warning">
-            <TicketIcon className="h-4 w-4" />
-            Código de parceiro
-          </h3>
-          <p className="mt-1 text-sm text-ink-muted">
-            Recebeu um código exclusivo? Ele estende seu trial. Sem cobrança.
-          </p>
-
-          <div className="mt-3 flex flex-wrap items-end gap-2">
-            <div className="flex-1 min-w-[200px]">
-              <label className="label">Código de parceiro</label>
-              <input
-                type="text"
-                value={partnerCode}
-                onChange={(e) => {
-                  setPartnerCode(e.target.value.toUpperCase());
-                  setPartnerResult(null);
-                }}
-                placeholder="Ex.: PARCEIRO90"
-                className="input uppercase"
-                autoComplete="off"
-                spellCheck={false}
-                autoCorrect="off"
-                autoCapitalize="characters"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={onApplyPartnerVoucher}
-              disabled={!partnerCode.trim() || partnerSubmitting}
-              className="btn-secondary"
-            >
-              {partnerSubmitting ? "Aplicando..." : "Aplicar"}
-            </button>
-          </div>
-
-          {partnerResult?.ok && (
-            <div className="mt-3 rounded-lg border border-success/40 bg-success/10 p-3 text-sm">
-              <div className="flex items-center gap-2 font-bold text-success">
-                <CheckIcon className="h-4 w-4" />
-                Cupom aplicado
-              </div>
-              <div className="mt-1 text-ink">
-                Seu trial foi estendido em{" "}
-                <strong>{partnerResult.daysExtended} dias</strong>. Novo
-                vencimento:{" "}
-                <strong>{formatDateBr(partnerResult.newTrialEndsAt)}</strong>.
-              </div>
-            </div>
-          )}
-          {partnerResult?.ok === false && (
-            <div className="mt-3 flex items-center gap-2 rounded-lg border border-danger/40 bg-danger/10 p-3 text-sm text-danger">
-              <CloseIcon className="h-4 w-4 shrink-0" />
-              {partnerResult.reason}
-            </div>
-          )}
-        </div>
-      )}
-
+      {/* Planos pagos */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        {(Object.keys(PLANS) as PlanId[]).map((planId) => {
+        {PAID_PLAN_ORDER.map((planId) => {
           const p = PLANS[planId];
+          if (!p.prices) return null;
           const isCurrent = currentPlan === planId && status === "active";
           const isPro = planId === "pro";
           const submitting = submittingPlan === planId && isPending;
+          const slots = pioneiroSlots[planId] ?? 0;
+          const willBePioneiro = slots > 0;
+          const cheio = cycle === "monthly" ? p.prices.monthly : p.prices.annual;
+          const pio = priceFor(planId, cycle, willBePioneiro);
+          const off = Math.round(((cheio - pio) / cheio) * 100);
           const showVoucherPrice =
             voucherActive && voucherSelectedPlan === planId;
+
           return (
             <div
               key={planId}
@@ -434,22 +402,27 @@ export function BillingClient({
             >
               {isPro && (
                 <div className="absolute -top-2 right-4 rounded-full bg-accent px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-black">
-                  {t("Billing.plan_pro_recommended")}
+                  Mais escolhido
                 </div>
               )}
               <h3 className="text-xl font-bold">{p.name}</h3>
-              <div className="mt-2">
+
+              {willBePioneiro && (
+                <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent">
+                  Pioneiro · {off}% off
+                </div>
+              )}
+
+              <div className="mt-3">
                 {showVoucherPrice ? (
                   <>
                     <span className="text-sm text-ink-dim line-through">
-                      {formatBrl(p.price)}
+                      {formatBrl(pio)}
                     </span>
                     <div className="mt-1">
                       <span className="text-3xl font-black text-success">
                         {formatBrl(
-                          voucherResult!.ok
-                            ? voucherResult!.finalPrice
-                            : p.price
+                          voucherResult!.ok ? voucherResult!.finalPrice : pio
                         )}
                       </span>
                       <span className="text-sm text-ink-dim"> hoje</span>
@@ -457,30 +430,49 @@ export function BillingClient({
                   </>
                 ) : (
                   <>
-                    <span className="text-3xl font-black">R$ {p.price}</span>
-                    <span className="text-sm text-ink-dim"> / mês</span>
+                    {willBePioneiro && (
+                      <div className="text-sm text-ink-dim line-through">
+                        {formatBrl(cheio)}
+                      </div>
+                    )}
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-black">{formatBrl(pio)}</span>
+                      <span className="text-sm text-ink-dim">
+                        {cycle === "annual" ? " / ano" : " / mês"}
+                      </span>
+                    </div>
                   </>
                 )}
               </div>
-              <p className="mt-2 text-sm text-ink-muted">
-                {planId === "starter"
-                  ? "Até 10 alunos. Para quem está começando."
-                  : planId === "pro"
-                  ? "Até 50 alunos. Para PT em crescimento."
-                  : "Alunos ilimitados. Para PT consolidado."}
-              </p>
+
+              {willBePioneiro ? (
+                <p className="mt-1 text-xs text-ink-muted">
+                  Restam <strong className="text-accent">{slots} vagas</strong>{" "}
+                  por esse preço
+                </p>
+              ) : (
+                <p className="mt-1 text-xs text-ink-muted">
+                  Vagas Pioneiro esgotadas neste plano
+                </p>
+              )}
+
+              <p className="mt-3 text-sm text-ink-muted">{p.desc}</p>
 
               <ul className="mt-4 space-y-2 text-sm text-ink-muted">
-                <PlanFeature>Treinos e blocos ilimitados</PlanFeature>
                 <PlanFeature>
                   {p.studentLimit
                     ? `Até ${p.studentLimit} alunos`
                     : "Alunos ilimitados"}
                 </PlanFeature>
                 <PlanFeature>Página pública personalizada</PlanFeature>
-                <PlanFeature>Anamnese e captação automática</PlanFeature>
-                <PlanFeature>App do aluno no celular</PlanFeature>
-                <PlanFeature>Cobrança Pix recorrente</PlanFeature>
+                <PlanFeature>Avaliação física Pollock 7 dobras</PlanFeature>
+                <PlanFeature>Anamnese, treinos, chat</PlanFeature>
+                <PlanFeature>WhatsApp Send + PDF profissional</PlanFeature>
+                {willBePioneiro && (
+                  <PlanFeature>
+                    Preço travado enquanto for assinante
+                  </PlanFeature>
+                )}
               </ul>
 
               {voucher.trim() && !voucherUsed && !showVoucherPrice && (
@@ -506,18 +498,14 @@ export function BillingClient({
                 {submitting
                   ? "Gerando Pix..."
                   : isCurrent
-                  ? t("Billing.current_plan")
+                  ? "Plano atual"
                   : !cpfReady
                   ? "Preencha o CPF acima"
                   : showVoucherPrice
                   ? `Pagar ${formatBrl(
-                      voucherResult!.ok
-                        ? voucherResult!.finalPrice
-                        : p.price
+                      voucherResult!.ok ? voucherResult!.finalPrice : pio
                     )} com Pix`
-                  : status === "active"
-                  ? t("Billing.btn_change_plan")
-                  : `Pagar com Pix`}
+                  : `Pagar ${formatBrl(pio)} com Pix`}
               </button>
             </div>
           );
@@ -529,7 +517,7 @@ export function BillingClient({
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; className: string }> = {
-    trialing: { label: "Em trial", className: "bg-accent/15 text-accent" },
+    free: { label: "Free", className: "bg-bg-elevated text-ink-dim" },
     pending_payment: {
       label: "Aguardando pagamento",
       className: "bg-warning/15 text-warning",
@@ -539,13 +527,9 @@ function StatusBadge({ status }: { status: string }) {
       label: "Pagamento pendente",
       className: "bg-warning/15 text-warning",
     },
-    trial_expired: {
-      label: "Trial expirado",
-      className: "bg-danger/15 text-danger",
-    },
     canceled: { label: "Cancelado", className: "bg-bg-elevated text-ink-dim" },
   };
-  const info = map[status] ?? map.trialing;
+  const info = map[status] ?? map.free;
   return (
     <span
       className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${info.className}`}
@@ -555,10 +539,6 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-/**
- * Modal de pagamento Pix: mostra QR + copia e cola, faz polling de status,
- * exibe sucesso quando confirmado.
- */
 function PixPaymentModal({
   data,
   onClose,
@@ -571,10 +551,9 @@ function PixPaymentModal({
   const [copied, setCopied] = useState(false);
   const [paid, setPaid] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
-  const [pollMsg, setPollMsg] = useState("Aguardando pagamento...");
+  const [pollMsg] = useState("Aguardando pagamento...");
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Countdown ate expirar
   useEffect(() => {
     const exp = new Date(data.expiresAt).getTime();
     const tick = () => {
@@ -586,7 +565,6 @@ function PixPaymentModal({
     return () => clearInterval(id);
   }, [data.expiresAt]);
 
-  // Polling de status
   useEffect(() => {
     if (paid) return;
     let cancelled = false;
@@ -595,7 +573,6 @@ function PixPaymentModal({
       if (cancelled) return;
       if (r.ok && r.paid) {
         setPaid(true);
-        setPollMsg("Pagamento confirmado!");
         if (intervalRef.current) clearInterval(intervalRef.current);
         setTimeout(() => onPaid(), 2000);
       }
@@ -646,7 +623,7 @@ function PixPaymentModal({
               Pagamento confirmado!
             </h2>
             <p className="mt-2 text-sm text-ink-muted">
-              Sua assinatura está ativa. Atualizando...
+              Sua assinatura está ativa. Atualizando…
             </p>
           </div>
         ) : (
@@ -720,10 +697,6 @@ function PixPaymentModal({
   );
 }
 
-/**
- * Painel mostrado quando subscription_status === "active":
- * plano, valor, próxima cobrança, histórico, botão de cancelar.
- */
 function ActiveSubscriptionPanel({
   details,
   currentPlan,
@@ -771,7 +744,7 @@ function ActiveSubscriptionPanel({
 
         <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Stat label="Plano atual" value={PLANS[currentPlan].name} />
-          <Stat label="Valor mensal" value={formatBrl(details.value)} />
+          <Stat label="Valor" value={formatBrl(details.value)} />
           <Stat
             label="Próxima cobrança"
             value={formatDateBr(details.nextDueDate)}
@@ -846,9 +819,7 @@ function ActiveSubscriptionPanel({
           proporcional.
         </p>
 
-        {error && (
-          <p className="mt-2 text-sm text-danger">{error}</p>
-        )}
+        {error && <p className="mt-2 text-sm text-danger">{error}</p>}
 
         {!confirmCancel ? (
           <button
@@ -866,7 +837,7 @@ function ActiveSubscriptionPanel({
               disabled={canceling}
               className="btn-primary bg-danger hover:bg-danger/90"
             >
-              {canceling ? "Cancelando..." : "Confirmar cancelamento"}
+              {canceling ? "Cancelando…" : "Confirmar cancelamento"}
             </button>
             <button
               type="button"

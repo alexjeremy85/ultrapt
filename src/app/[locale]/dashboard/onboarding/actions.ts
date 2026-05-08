@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { computeStudentLimit } from "@/lib/student-limit";
+import { type PlanId } from "@/lib/plans";
 
 export async function quickStart(formData: FormData) {
   const locale = await getLocale();
@@ -21,6 +23,29 @@ export async function quickStart(formData: FormData) {
   if (!studentName) {
     redirect({
       href: `/dashboard/onboarding?error=${encodeURIComponent("Informe o nome do aluno")}`,
+      locale,
+    });
+  }
+
+  // Limite de alunos por plano
+  const [{ data: tr }, { count: studentCount }] = await Promise.all([
+    supabase
+      .from("trainers")
+      .select("subscription_plan")
+      .eq("id", user!.id)
+      .maybeSingle(),
+    supabase
+      .from("students")
+      .select("*", { count: "exact", head: true })
+      .eq("trainer_id", user!.id),
+  ]);
+  const planId = (tr?.subscription_plan ?? "free") as PlanId;
+  const limit = computeStudentLimit(planId, studentCount ?? 0);
+  if (limit.atLimit) {
+    redirect({
+      href: `/dashboard/billing?error=${encodeURIComponent(
+        `Limite do plano atingido. Faca upgrade pra cadastrar mais alunos.`
+      )}`,
       locale,
     });
   }

@@ -13,8 +13,9 @@ import {
 import { logout } from "../(auth)/login/actions";
 import { trainerUnreadCounts } from "@/lib/chat";
 import { SidebarLink } from "./SidebarLink";
-import { TrialBanner } from "./TrialBanner";
+import { UpgradePulseBanner } from "./UpgradePulseBanner";
 import { MobileBottomNav } from "./MobileBottomNav";
+import { type PlanId } from "@/lib/plans";
 
 export default async function DashboardLayout({
   children,
@@ -36,14 +37,24 @@ export default async function DashboardLayout({
     redirect({ href: "/login", locale });
   }
 
-  const [{ data: trainer }, unread] = await Promise.all([
+  const [{ data: trainer }, { count: studentCount }, unread] = await Promise.all([
     supabase
       .from("trainers")
-      .select("full_name, slug, photo_url, subscription_status, trial_ends_at")
+      .select("full_name, slug, photo_url, subscription_status, subscription_plan")
       .eq("id", user!.id)
       .maybeSingle(),
+    supabase
+      .from("students")
+      .select("*", { count: "exact", head: true })
+      .eq("trainer_id", user!.id),
     trainerUnreadCounts(),
   ]);
+
+  const planId = (trainer?.subscription_plan ?? "free") as PlanId;
+  const studentLimit =
+    planId === "free" ? 2 :
+    planId === "solo" ? 5 :
+    planId === "pro" ? 30 : null;
 
   return (
     <div className="flex min-h-dvh bg-bg">
@@ -124,13 +135,17 @@ export default async function DashboardLayout({
       </aside>
 
       <div className="flex flex-1 flex-col">
-        <TrialBanner
-          status={trainer?.subscription_status ?? null}
-          trialEndsAt={trainer?.trial_ends_at ?? null}
-        />
         {/* pt-safe: respeita notch/dynamic island ja que nao ha TopBar.
             pb-20 mobile: espaco pra MobileBottomNav. */}
         <main className="pt-safe flex-1 px-4 pb-20 md:px-8 md:pb-8">
+          <div className="mb-4 mt-4 md:mt-6">
+            <UpgradePulseBanner
+              status={trainer?.subscription_status ?? null}
+              planId={planId}
+              studentCount={studentCount ?? 0}
+              studentLimit={studentLimit}
+            />
+          </div>
           {children}
         </main>
       </div>

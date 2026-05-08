@@ -96,37 +96,37 @@ export default async function TermosPage({
         </section>
 
         <section>
-          <h2 className="mb-2 text-base font-semibold">Cláusula 4ª — Do Período de Avaliação</h2>
-          <p>4.1. É concedido ao PERSONAL TRAINER um Período de Avaliação gratuito de 14 (quatorze) dias corridos, contados a partir da data do cadastro, durante o qual o acesso às funcionalidades da Plataforma será integral, sem cobrança.</p>
-          <p className="mt-2">4.2. O Período de Avaliação poderá ser estendido mediante aplicação de cupom de parceiro válido, fornecido pelo ULTRAPT a seu critério, observadas as seguintes condições: (i) os cupons não são cumulativos entre si; (ii) a extensão é vinculada ao cupom específico utilizado e não gera direito a renovação ou prorrogação adicional.</p>
-          <p className="mt-2">4.3. Ao final do Período de Avaliação, não haverá cobrança automática. A continuidade do acesso depende de ação afirmativa do PERSONAL TRAINER, que deverá optar expressamente por um dos planos previstos na Cláusula 5ª.</p>
+          <h2 className="mb-2 text-base font-semibold">Cláusula 4ª — Do Plano Free</h2>
+          <p>4.1. É disponibilizado, sem custo e por prazo indeterminado, o <strong>Plano Free</strong>, que permite ao PERSONAL TRAINER cadastrar e gerenciar até 2 (dois) alunos.</p>
+          <p className="mt-2">4.2. O Plano Free não exige cartão de crédito nem dados de cobrança. Não há prazo de validade nem conversão automática para plano pago.</p>
+          <p className="mt-2">4.3. O acesso às funcionalidades adicionais e a remoção do limite de alunos depende de adesão expressa a um dos Planos Pagos previstos na Cláusula 5ª.</p>
         </section>
 
         <section>
-          <h2 className="mb-2 text-base font-semibold">Cláusula 5ª — Do Preço e da Forma de Pagamento</h2>
-          <p>5.1. O PERSONAL TRAINER poderá optar, ao final do Período de Avaliação ou a qualquer tempo, por um dos seguintes planos:</p>
-          <p className="mt-2 ml-4">5.1.1. <strong>Plano Mensal:</strong> pelo valor de R$ 197,00 (cento e noventa e sete reais) por mês, em modalidade de assinatura recorrente, com renovação automática a cada ciclo mensal, sem prazo mínimo de fidelidade.</p>
-          <p className="mt-1 ml-4">5.1.2. <strong>Plano Anual:</strong> pelo valor único de R$ 997,00 (novecentos e noventa e sete reais), correspondente a 12 (doze) meses de acesso, sem renovação automática.</p>
-          <p className="mt-2">5.2. O pagamento será processado por meio do gateway Asaas, terceiro contratado para essa finalidade, podendo ser realizado por cartão de crédito, boleto bancário ou Pix, conforme os meios disponibilizados na ocasião.</p>
-          <p className="mt-2">5.3. Os dados de pagamento (cartão de crédito, conta bancária ou equivalente) são coletados, processados e armazenados diretamente pelo Asaas, na qualidade de operador de pagamento, não sendo armazenados pelo ULTRAPT.</p>
-          <p className="mt-2">5.4. O atraso superior a 5 (cinco) dias no pagamento de qualquer parcela acarretará, sem prejuízo de outras medidas, a suspensão do acesso à Plataforma, ressalvado o aviso prévio enviado por e-mail.</p>
-          <p className="mt-2">5.5. Sobre os valores em atraso incidirão correção monetária pelo IPCA, juros de mora de 1% (um por cento) ao mês e multa moratória de 2% (dois por cento) sobre o valor devido.</p>
+          <h2 className="mb-2 text-base font-semibold">Cláusula 5ª — Dos Planos Pagos e da Forma de Pagamento</h2>
+          <p>5.1. Os Planos Pagos disponíveis são:</p>
+          <p className="mt-2 ml-4">5.1.1. <strong>Plano Solo:</strong> R$ 39,00 mensais (até 5 alunos), em assinatura recorrente sem fidelidade; ou R$ 279,00 à vista no anual (12 meses).</p>
+          <p className="mt-1 ml-4">5.1.2. <strong>Plano Pro:</strong> R$ 79,00 mensais (até 30 alunos), em assinatura recorrente sem fidelidade; ou R$ 559,00 à vista no anual (12 meses).</p>
+          <p className="mt-1 ml-4">5.1.3. <strong>Plano Escala:</strong> R$ 99,00 mensais (alunos ilimitados), em assinatura recorrente sem fidelidade; ou R$ 699,00 à vista no anual (12 meses).</p>
+          <p className="mt-2">5.2. O pagamento será processado por meio do gateway Asaas, podendo ser realizado por cartão de crédito, boleto bancário ou Pix, conforme os meios disponibilizados.</p>
+          <p className="mt-2">5.3. Os dados de pagamento são coletados, processados e armazenados diretamente pelo Asaas, na qualidade de operador de pagamento, não sendo armazenados pelo ULTRAPT.</p>
+          <p className="mt-2">5.4. No plano mensal, o atraso superior a 5 (cinco) dias no pagamento de qualquer parcela acarretará suspensão do acesso à Plataforma, ressalvado o aviso prévio enviado por e-mail. Após suspensão prolongada, a conta retorna ao Plano Free.</p>
+          <p className="mt-2">5.5. Sobre valores em atraso incidirão correção monetária pelo IPCA, juros de mora de 1% (um por cento) ao mês e multa moratória de 2% (dois por cento) sobre o valor devido.</p>
         </section>
 
         <section>
           <h2 className="mb-2 text-base font-semibold">Cláusula 6ª — Do Reajuste</h2>
-          <p>6.1. Os valores das mensalidades poderão ser reajustados anualmente, observada a periodicidade mínima legal, mediante a aplicação da variação acumulada do IPCA/IBGE no período, ou de outro índice oficial que vier a substituí-lo.</p>
+          <p>6.1. Os valores poderão ser reajustados anualmente, observada a periodicidade mínima legal, mediante aplicação da variação acumulada do IPCA/IBGE no período, ou de outro índice oficial que vier a substituí-lo.</p>
           <p className="mt-2">6.2. Reajustes acima do índice oficial, decorrentes de reposicionamento comercial, serão comunicados ao PERSONAL TRAINER com antecedência mínima de 30 (trinta) dias, facultando-lhe o cancelamento sem ônus antes da entrada em vigor do novo preço.</p>
-          <p className="mt-2">6.3. Fica desde já estabelecido reajuste programado do Plano Mensal de R$ 197,00 (cento e noventa e sete reais) para R$ 247,00 (duzentos e quarenta e sete reais), com data de vigência a ser oportunamente comunicada, ressalvada a hipótese da Cláusula 7ª.</p>
         </section>
 
         <section>
-          <h2 className="mb-2 text-base font-semibold">Cláusula 7ª — Do Founder&apos;s Tier</h2>
-          <p>7.1. O ULTRAPT oferece, em caráter promocional e por prazo determinado, condição especial denominada &quot;Founder&apos;s Tier&quot;, limitada aos 20 (vinte) primeiros assinantes que aderirem por ordem cronológica de adesão.</p>
-          <p className="mt-2">7.2. Constituem benefícios do Founder&apos;s Tier: (i) garantia de manutenção dos preços de R$ 197,00 mensais ou R$ 997,00 anuais, mesmo após eventual reajuste comercial referido na Cláusula 6.3, observado o reajuste anual de inflação; e (ii) acesso a canal direto com o fundador para envio de feedback de produto.</p>
-          <p className="mt-2">7.3. A garantia de preço prevista neste tier vigora pelo prazo inicial de 12 (doze) meses, prorrogável automaticamente, em iguais e sucessivos períodos, enquanto o PERSONAL TRAINER mantiver assinatura ativa e adimplente.</p>
-          <p className="mt-2">7.4. Perde-se o direito ao Founder&apos;s Tier nas seguintes hipóteses: (i) cancelamento da assinatura por período superior a 30 (trinta) dias consecutivos; ou (ii) inadimplemento não regularizado no prazo previsto na Cláusula 5.4.</p>
-          <p className="mt-2">7.5. Eventual nova adesão posterior à perda do benefício ocorrerá ao preço vigente à época, sem reabertura do Founder&apos;s Tier.</p>
+          <h2 className="mb-2 text-base font-semibold">Cláusula 7ª — Do Plano Pioneiro</h2>
+          <p>7.1. O ULTRAPT oferece, em caráter promocional, condição especial denominada &quot;Pioneiro&quot;, com até 50% de desconto sobre o valor cheio, limitada aos 10 (dez) primeiros assinantes em cada plano pago (Solo, Pro e Escala), por ordem cronológica de adesão.</p>
+          <p className="mt-2">7.2. Valores Pioneiro: <strong>Solo R$ 19/mês</strong> (anual R$ 149); <strong>Pro R$ 39/mês</strong> (anual R$ 299); <strong>Escala R$ 49/mês</strong> (anual R$ 379).</p>
+          <p className="mt-2">7.3. Constituem benefícios do Pioneiro: (i) preço travado enquanto a assinatura permanecer ativa e adimplente, mesmo após eventuais reajustes comerciais; e (ii) acesso a canal direto com o fundador para envio de feedback de produto.</p>
+          <p className="mt-2">7.4. Perde-se o direito ao Pioneiro nas seguintes hipóteses: (i) cancelamento da assinatura por período superior a 30 (trinta) dias consecutivos; ou (ii) inadimplemento não regularizado no prazo previsto na Cláusula 5.4.</p>
+          <p className="mt-2">7.5. Eventual nova adesão posterior à perda do benefício ocorrerá ao preço cheio vigente à época, sem reabertura das vagas Pioneiro.</p>
         </section>
 
         <section>

@@ -74,19 +74,19 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Subscription gate: bloqueia acesso ao app se o status nao for valido.
-  // /dashboard/billing fica acessivel pra o trainer regularizar.
+  // Subscription gate: 'free' e 'active' passam direto.
+  // 'pending_payment' tambem pode usar (acabou de iniciar). 'past_due' e
+  // 'canceled' caem em /billing pra regularizar.
   if (user && isAppRoute && !isBillingRoute) {
     const { data: trainer } = await supabase
       .from("trainers")
       .select("subscription_status")
       .eq("id", user.id)
       .maybeSingle();
-    const status = trainer?.subscription_status ?? "trialing";
-    const allowed = status === "trialing" || status === "active";
+    const status = trainer?.subscription_status ?? "free";
+    const allowed = status === "free" || status === "active" || status === "pending_payment";
     if (!allowed) {
       const url = request.nextUrl.clone();
-      // Mantem o prefixo de locale ja presente no pathname
       const localeMatch = request.nextUrl.pathname.match(/^\/([a-z]{2}(-[A-Z]{2})?)\//);
       const localePrefix = localeMatch ? `/${localeMatch[1]}` : "";
       url.pathname = `${localePrefix}/dashboard/billing`;
