@@ -58,6 +58,22 @@ export async function createStudent(formData: FormData) {
 
   const birthRaw = String(formData.get("birth_date") ?? "").trim();
 
+  const tagsRaw = String(formData.get("tags") ?? "").trim();
+  const tags = tagsRaw
+    ? tagsRaw
+        .split(",")
+        .map((t) => t.trim().toLowerCase())
+        .filter((t) => t.length > 0 && t.length <= 30)
+        .slice(0, 10)
+    : [];
+
+  const monthlyValueRaw = String(formData.get("monthly_value") ?? "").trim();
+  const monthlyValue = monthlyValueRaw ? Number(monthlyValueRaw) : null;
+  const dueDayRaw = String(formData.get("payment_due_day") ?? "").trim();
+  const dueDayNum = dueDayRaw ? Number(dueDayRaw) : null;
+  const dueDay =
+    dueDayNum !== null && dueDayNum >= 1 && dueDayNum <= 31 ? dueDayNum : null;
+
   const insertPayload = {
     trainer_id: user!.id,
     full_name: fullName,
@@ -66,6 +82,9 @@ export async function createStudent(formData: FormData) {
     objective: String(formData.get("objective") ?? "").trim() || null,
     experience_level: expLevel,
     birth_date: birthRaw || null,
+    tags,
+    monthly_value: monthlyValue,
+    payment_due_day: dueDay,
     status: "active",
   };
 

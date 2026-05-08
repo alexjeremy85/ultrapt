@@ -16,6 +16,7 @@ import { SidebarLink } from "./SidebarLink";
 import { UpgradePulseBanner } from "./UpgradePulseBanner";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { CommunityInviteModal } from "./CommunityInviteModal";
+import { NotificationsBell } from "./NotificationsBell";
 import { type PlanId } from "@/lib/plans";
 
 export default async function DashboardLayout({
@@ -38,7 +39,12 @@ export default async function DashboardLayout({
     redirect({ href: "/login", locale });
   }
 
-  const [{ data: trainer }, { count: studentCount }, unread] = await Promise.all([
+  const [
+    { data: trainer },
+    { count: studentCount },
+    unread,
+    { data: notifications },
+  ] = await Promise.all([
     supabase
       .from("trainers")
       .select("full_name, slug, photo_url, subscription_status, subscription_plan, community_invite_seen_at")
@@ -49,6 +55,12 @@ export default async function DashboardLayout({
       .select("*", { count: "exact", head: true })
       .eq("trainer_id", user!.id),
     trainerUnreadCounts(),
+    supabase
+      .from("notifications")
+      .select("id, kind, title, body, link, read_at, created_at")
+      .eq("trainer_id", user!.id)
+      .order("created_at", { ascending: false })
+      .limit(20),
   ]);
 
   const planId = (trainer?.subscription_plan ?? "free") as PlanId;
@@ -139,13 +151,16 @@ export default async function DashboardLayout({
         {/* pt-safe: respeita notch/dynamic island ja que nao ha TopBar.
             pb-20 mobile: espaco pra MobileBottomNav. */}
         <main className="pt-safe flex-1 px-4 pb-20 md:px-8 md:pb-8">
-          <div className="mb-4 mt-4 md:mt-6">
-            <UpgradePulseBanner
-              status={trainer?.subscription_status ?? null}
-              planId={planId}
-              studentCount={studentCount ?? 0}
-              studentLimit={studentLimit}
-            />
+          <div className="mb-4 mt-4 flex items-start justify-between gap-3 md:mt-6">
+            <div className="flex-1">
+              <UpgradePulseBanner
+                status={trainer?.subscription_status ?? null}
+                planId={planId}
+                studentCount={studentCount ?? 0}
+                studentLimit={studentLimit}
+              />
+            </div>
+            <NotificationsBell notifications={notifications ?? []} />
           </div>
           {children}
         </main>

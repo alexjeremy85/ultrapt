@@ -2,6 +2,7 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { ArrowLeftIcon } from "@/components/icons";
 import { createWorkout } from "./actions";
+import { FrequencySlider } from "./FrequencySlider";
 
 export default async function NewWorkoutPage({
   params,
@@ -84,16 +85,33 @@ export default async function NewWorkoutPage({
               className="input"
             />
           </div>
-          <label className="flex items-end gap-2 pb-2 text-sm">
+          <div>
+            <label className="label">Semana do plano</label>
             <input
-              type="checkbox"
-              name="is_template"
-              value="1"
-              className="rounded border-border accent-accent"
+              name="week_index"
+              type="number"
+              min="1"
+              max="52"
+              defaultValue="1"
+              className="input"
             />
-            {t("Workouts.field_is_template")}
-          </label>
+            <p className="mt-1 text-[10px] text-ink-dim">
+              Use pra montar plano periodizado (semana 1, 2, 3...).
+            </p>
+          </div>
         </div>
+
+        <FrequencySlider defaultValue={3} />
+
+        <label className="flex items-center gap-2 pt-2 text-sm">
+          <input
+            type="checkbox"
+            name="is_template"
+            value="1"
+            className="rounded border-border accent-accent"
+          />
+          {t("Workouts.field_is_template")}
+        </label>
 
         <div className="flex justify-end gap-2 pt-2">
           <Link href="/dashboard/workouts" className="btn-ghost">

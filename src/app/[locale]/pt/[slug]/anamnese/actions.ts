@@ -113,6 +113,13 @@ export async function submitAnamnesis(formData: FormData) {
     redirect({ href: `/`, locale });
   }
 
+  const acquisitionSource =
+    String(formData.get("utm_source") ?? "").trim() || null;
+  const acquisitionCampaign =
+    String(formData.get("utm_campaign") ?? "").trim() || null;
+  const acquisitionReferrer =
+    String(formData.get("referrer") ?? "").trim() || null;
+
   // Insert via admin client com whitelist explicita de colunas.
   // (RLS anon insert revogada via migration 0014)
   const { error, data: insertedRow } = await admin2
@@ -134,6 +141,9 @@ export async function submitAnamnesis(formData: FormData) {
       photo_url: photoUrl,
       anamnesis_data: data,
       anamnesis_submitted_at: new Date().toISOString(),
+      acquisition_source: acquisitionSource,
+      acquisition_campaign: acquisitionCampaign,
+      acquisition_referrer: acquisitionReferrer,
       // user_id e access_code ficam null/default - o cliente NUNCA controla
     })
     .select("id")

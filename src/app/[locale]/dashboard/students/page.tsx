@@ -22,7 +22,7 @@ export default async function StudentsPage({
     supabase
       .from("students")
       .select(
-        "id, full_name, email, phone, status, objective, experience_level, photo_url, anamnesis_submitted_at, workout_assignments(workout:workouts(id, name))"
+        "id, full_name, email, phone, status, objective, experience_level, photo_url, anamnesis_submitted_at, tags, workout_assignments(workout:workouts(id, name))"
       )
       .eq("trainer_id", user!.id)
       .order("created_at", { ascending: false }),
@@ -39,6 +39,7 @@ export default async function StudentsPage({
     experience_level: string | null;
     photo_url: string | null;
     anamnesis_submitted_at: string | null;
+    tags: string[] | null;
     workout_assignments: Array<{
       workout: { id: string; name: string } | { id: string; name: string }[] | null;
     }>;
@@ -136,6 +137,19 @@ export default async function StudentsPage({
                           <span className="capitalize">{s.experience_level}</span>
                         )}
                       </div>
+
+                      {(s.tags ?? []).length > 0 && (
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {(s.tags ?? []).slice(0, 4).map((tag) => (
+                            <span
+                              key={tag}
+                              className="rounded-full bg-accent/10 px-1.5 py-0.5 text-[10px] font-medium text-accent"
+                            >
+                              #{tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
 
                       {/* Estado do treino — chamada a acao se nao tem treino */}
                       <div className="mt-1.5">

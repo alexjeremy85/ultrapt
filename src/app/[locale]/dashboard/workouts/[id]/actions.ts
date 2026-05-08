@@ -190,3 +190,63 @@ export async function createCustomExercise(input: {
   revalidatePath("/[locale]/dashboard/workouts", "layout");
   return { ok: true, exercise: data };
 }
+
+export async function bulkAssignWorkout({
+  workoutId,
+  studentIds,
+}: {
+  workoutId: string;
+  studentIds: string[];
+}) {
+  const { supabase, user } = await authedClient();
+
+  const { data: workout } = await supabase
+    .from("workouts")
+    .select("id")
+    .eq("id", workoutId)
+    .eq("trainer_id", user.id)
+    .maybeSingle();
+  if (!workout) return { ok: false as const, error: "Treino nao encontrado" };
+
+  if (studentIds.length === 0) {
+    return { ok: false as const, error: "Selecione ao menos um aluno" };
+  }
+
+  const { data: students } = await supabase
+    .from("students")
+    .select("id")
+    .eq("trainer_id", user.id)
+    .in("id", studentIds);
+  const validIds = (students ?? []).map((s) => s.id);
+  if (validIds.length === 0) {
+    return { ok: false as const, error: "Nenhum aluno valido" };
+  }
+
+  const { data: existing } = await supabase
+    .from("workout_assignments")
+    .select("student_id")
+    .eq("workout_id", workoutId)
+    .in("student_id", validIds);
+  const alreadyHave = new Set((existing ?? []).map((e) => e.student_id));
+
+  const toInsert = validIds
+    .filter((id) => !alreadyHave.has(id))
+    .map((id) => ({
+      workout_id: workoutId,
+      student_id: id,
+      start_date: new Date().toISOString().slice(0, 10),
+      is_active: true,
+    }));
+
+  if (toInsert.length > 0) {
+    const { error } = await supabase.from("workout_assignments").insert(toInsert);
+    if (error) return { ok: false as const, error: error.message };
+  }
+
+  revalidatePath("/[locale]/dashboard", "layout");
+  return {
+    ok: true as const,
+    applied: toInsert.length,
+    skipped: alreadyHave.size,
+  };
+}

@@ -37,6 +37,8 @@ export async function createWorkout(formData: FormData) {
       goal: String(formData.get("goal") ?? "").trim() || null,
       level,
       duration_weeks: Number(formData.get("duration_weeks")) || 4,
+      weekly_frequency: Number(formData.get("weekly_frequency")) || null,
+      week_index: Number(formData.get("week_index")) || 1,
       is_template: formData.get("is_template") === "1",
     })
     .select("id")

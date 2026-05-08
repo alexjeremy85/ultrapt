@@ -4,6 +4,52 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getSiteUrl } from "@/lib/site-url";
 
+export async function recordStudentPayment(formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "unauthorized" };
+
+  const studentId = String(formData.get("student_id") ?? "");
+  const amountRaw = String(formData.get("amount") ?? "").trim();
+  const referenceMonthRaw = String(formData.get("reference_month") ?? "").trim();
+  const notes = String(formData.get("notes") ?? "").trim() || null;
+
+  if (!studentId || !amountRaw || !referenceMonthRaw) {
+    return { ok: false, error: "Preencha valor e mes de referencia" };
+  }
+
+  const { data: student } = await supabase
+    .from("students")
+    .select("id")
+    .eq("id", studentId)
+    .eq("trainer_id", user.id)
+    .maybeSingle();
+  if (!student) return { ok: false, error: "Aluno nao encontrado" };
+
+  const referenceMonth = referenceMonthRaw.length === 7
+    ? `${referenceMonthRaw}-01`
+    : referenceMonthRaw;
+
+  const { error } = await supabase.from("student_payments").insert({
+    student_id: studentId,
+    trainer_id: user.id,
+    amount: Number(amountRaw),
+    reference_month: referenceMonth,
+    notes,
+  });
+  if (error) return { ok: false, error: error.message };
+
+  await supabase
+    .from("students")
+    .update({ last_payment_at: new Date().toISOString() })
+    .eq("id", studentId);
+
+  revalidatePath(`/[locale]/dashboard/students/${studentId}`, "page");
+  return { ok: true };
+}
+
 export async function assignWorkoutToStudent(formData: FormData) {
   const supabase = await createClient();
   const {

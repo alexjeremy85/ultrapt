@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { submitAnamnesis } from "./actions";
 
@@ -14,6 +14,26 @@ export function AnamnesisForm({
   const t = useTranslations();
   const [gender, setGender] = useState("");
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [tracking, setTracking] = useState({
+    utm_source: "",
+    utm_campaign: "",
+    referrer: "",
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    const utm_source =
+      url.searchParams.get("utm_source") ??
+      url.searchParams.get("ref") ??
+      "";
+    const utm_campaign = url.searchParams.get("utm_campaign") ?? "";
+    const referrer =
+      document.referrer && !document.referrer.includes(window.location.host)
+        ? document.referrer
+        : "";
+    setTracking({ utm_source, utm_campaign, referrer });
+  }, []);
 
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -30,6 +50,9 @@ export function AnamnesisForm({
     <form action={submitAnamnesis} encType="multipart/form-data" className="space-y-10">
       <input type="hidden" name="trainer_id" value={trainerId} />
       <input type="hidden" name="slug" value={slug} />
+      <input type="hidden" name="utm_source" value={tracking.utm_source} />
+      <input type="hidden" name="utm_campaign" value={tracking.utm_campaign} />
+      <input type="hidden" name="referrer" value={tracking.referrer} />
 
       {/* PHOTO */}
       <div>

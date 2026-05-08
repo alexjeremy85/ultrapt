@@ -3,10 +3,11 @@ import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSiteUrl } from "@/lib/site-url";
-import { ChatIcon, ArrowLeftIcon } from "@/components/icons";
+import { ChatIcon, ArrowLeftIcon, ExternalLinkIcon } from "@/components/icons";
 import { AssignWorkoutForm } from "./AssignWorkoutForm";
 import { CopyLinkButton } from "./CopyLinkButton";
 import { WhatsAppWorkoutButton } from "./WhatsAppWorkoutButton";
+import { PaymentCard } from "./PaymentCard";
 
 export default async function StudentDetailPage({
   params,
@@ -33,7 +34,7 @@ export default async function StudentDetailPage({
   const { data: student, error: studentError } = await supabase
     .from("students")
     .select(
-      "id, full_name, email, phone, photo_url, objective, experience_level, access_code, status, anamnesis_submitted_at"
+      "id, full_name, email, phone, photo_url, objective, experience_level, access_code, status, anamnesis_submitted_at, tags, monthly_value, payment_due_day, last_payment_at"
     )
     .eq("id", id)
     .eq("trainer_id", user.id)
@@ -102,6 +103,18 @@ export default async function StudentDetailPage({
     .eq("id", user.id)
     .maybeSingle();
 
+  const { data: paymentsRaw } = await supabase
+    .from("student_payments")
+    .select("id, amount, paid_at, reference_month")
+    .eq("student_id", id)
+    .eq("trainer_id", user.id)
+    .order("paid_at", { ascending: false })
+    .limit(5);
+  const recentPayments = (paymentsRaw ?? []).map((p) => ({
+    ...p,
+    amount: Number(p.amount),
+  }));
+
   const siteUrl = getSiteUrl();
   const studentLink = `${siteUrl}/aluno/${student.access_code}`;
   const anamnesisLink = trainer?.slug
@@ -156,6 +169,14 @@ export default async function StudentDetailPage({
                 {student.experience_level && (
                   <span className="chip">{student.experience_level}</span>
                 )}
+                {(student.tags ?? []).map((tag: string) => (
+                  <span
+                    key={tag}
+                    className="rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[11px] font-medium text-accent"
+                  >
+                    #{tag}
+                  </span>
+                ))}
               </div>
             </div>
           </div>
@@ -173,6 +194,16 @@ export default async function StudentDetailPage({
             >
               Avaliação física
             </Link>
+            <a
+              href={studentLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-ghost inline-flex items-center gap-1.5 text-xs"
+              title="Abre o app do aluno em nova aba — útil pra revisar a experiência dele"
+            >
+              <ExternalLinkIcon className="h-3.5 w-3.5" />
+              Atuar como aluno
+            </a>
           </div>
         </div>
       </div>
@@ -228,6 +259,14 @@ export default async function StudentDetailPage({
           </div>
         </div>
       </div>
+
+      <PaymentCard
+        studentId={student.id}
+        monthlyValue={student.monthly_value ? Number(student.monthly_value) : null}
+        paymentDueDay={student.payment_due_day ?? null}
+        lastPaymentAt={student.last_payment_at ?? null}
+        recentPayments={recentPayments}
+      />
 
       <div className="card">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-dim">

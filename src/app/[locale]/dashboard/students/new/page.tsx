@@ -76,6 +76,50 @@ export default async function NewStudentPage({
           <input name="birth_date" type="date" className="input" />
         </div>
 
+        <div>
+          <label className="label">Tags (separe por vírgula)</label>
+          <input
+            name="tags"
+            type="text"
+            placeholder="emagrecimento, online, manhã"
+            className="input"
+          />
+          <p className="mt-1 text-xs text-ink-dim">
+            Use pra agrupar alunos (perfil, turno, objetivo, plano).
+          </p>
+        </div>
+
+        <div className="border-t border-border pt-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-dim">
+            Cobrança (opcional)
+          </h2>
+          <p className="mt-1 text-xs text-ink-muted">
+            Você cobra fora do app. Aqui só registra valor + dia pra acompanhar.
+          </p>
+          <div className="mt-3 grid grid-cols-2 gap-4">
+            <div>
+              <label className="label">Mensalidade (R$)</label>
+              <input
+                name="monthly_value"
+                type="number"
+                step="0.01"
+                min="0"
+                className="input"
+              />
+            </div>
+            <div>
+              <label className="label">Dia do vencimento</label>
+              <input
+                name="payment_due_day"
+                type="number"
+                min="1"
+                max="31"
+                className="input"
+              />
+            </div>
+          </div>
+        </div>
+
         <div className="flex justify-end gap-2 pt-2">
           <Link href="/dashboard/students" className="btn-ghost">
             {t("Common.cancel")}
