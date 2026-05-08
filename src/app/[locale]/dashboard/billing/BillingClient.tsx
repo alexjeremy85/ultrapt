@@ -408,9 +408,14 @@ export function BillingClient({
               <h3 className="text-xl font-bold">{p.name}</h3>
 
               {willBePioneiro && (
-                <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent">
-                  Pioneiro · {off}% off
-                </div>
+                <>
+                  <div className="mt-2 inline-flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-[10px] font-black uppercase tracking-wide text-black">
+                    Oferta de lançamento · {off}% off
+                  </div>
+                  <p className="mt-1 text-[10px] text-ink-muted">
+                    Primeiros 10 do plano travam esse preço.
+                  </p>
+                </>
               )}
 
               <div className="mt-3">
@@ -446,13 +451,26 @@ export function BillingClient({
               </div>
 
               {willBePioneiro ? (
-                <p className="mt-1 text-xs text-ink-muted">
-                  Restam <strong className="text-accent">{slots} vagas</strong>{" "}
-                  por esse preço
-                </p>
+                <div className="mt-2 rounded-lg border border-accent/30 bg-accent/10 px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60" />
+                      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-accent" />
+                    </span>
+                    <span className="text-sm font-bold text-accent">
+                      {slots} de 10 vagas restantes
+                    </span>
+                  </div>
+                  <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-bg-elevated">
+                    <div
+                      className="h-full bg-accent transition-all"
+                      style={{ width: `${((10 - slots) / 10) * 100}%` }}
+                    />
+                  </div>
+                </div>
               ) : (
                 <p className="mt-1 text-xs text-ink-muted">
-                  Vagas Pioneiro esgotadas neste plano
+                  Oferta de lançamento esgotada neste plano. Preço cheio.
                 </p>
               )}
 

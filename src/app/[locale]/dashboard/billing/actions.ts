@@ -97,8 +97,9 @@ export async function checkVoucher(
 }
 
 /**
- * Conta quantas vagas Pioneiro restam por plano. Lê via service_role
- * porque RLS publico nao expoe is_pioneiro.
+ * Conta quantas vagas Pioneiro restam por plano. So conta assinaturas
+ * efetivamente pagas (status='active'). Pending_payment, canceled, past_due
+ * nao consomem vaga.
  */
 export async function countPioneiroSlots(): Promise<
   Record<Exclude<PlanId, "free">, number>
@@ -107,7 +108,8 @@ export async function countPioneiroSlots(): Promise<
   const { data } = await admin
     .from("trainers")
     .select("subscription_plan")
-    .eq("is_pioneiro", true);
+    .eq("is_pioneiro", true)
+    .eq("subscription_status", "active");
   const used: Record<string, number> = { solo: 0, pro: 0, escala: 0 };
   (data ?? []).forEach((row: { subscription_plan: string | null }) => {
     if (row.subscription_plan && used[row.subscription_plan] !== undefined) {

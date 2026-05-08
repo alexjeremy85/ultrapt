@@ -1,6 +1,9 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { PLANS, type PlanId } from "@/lib/plans";
+import { countPioneiroSlots } from "./dashboard/billing/actions";
+
+export const revalidate = 60;
 
 export default async function HomePage({
   params,
@@ -34,7 +37,7 @@ export default async function HomePage({
 
         <FeaturesGrid />
 
-        <Pricing />
+        <Pricing slots={await countPioneiroSlots()} />
 
         <FinalCta ctaSignup={t("Landing.cta_signup")} />
 
@@ -450,10 +453,12 @@ function CheckLine({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Pricing() {
+function Pricing({
+  slots,
+}: {
+  slots: Record<Exclude<PlanId, "free">, number>;
+}) {
   const order: Exclude<PlanId, "free">[] = ["solo", "pro", "escala"];
-  // TODO: trocar por contagem real de pioneiros quando aparecer o primeiro
-  const slots: Record<string, number> = { solo: 10, pro: 10, escala: 10 };
 
   return (
     <section id="pricing" className="mt-32 lg:mt-40">
@@ -497,6 +502,11 @@ function Pricing() {
           const cheio = p.prices.monthly;
           const pio = p.prices.monthlyPioneiro;
           const off = Math.round(((cheio - pio) / cheio) * 100);
+          const totalVagas = 10;
+          const vagasRestantes = slots[id] ?? 0;
+          const usadas = totalVagas - vagasRestantes;
+          const ofertaAtiva = vagasRestantes > 0;
+          const precoExibido = ofertaAtiva ? pio : cheio;
           return (
             <div
               key={id}
@@ -516,22 +526,47 @@ function Pricing() {
                 {p.name}
               </div>
 
-              <div className="mt-3">
-                <div className="inline-flex items-center gap-2 rounded-full bg-accent/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-accent">
-                  Pioneiro · {off}% off
-                </div>
-              </div>
+              {ofertaAtiva && (
+                <>
+                  <div className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-black">
+                    Oferta de lançamento · {off}% OFF
+                  </div>
+                  <p className="mt-1 text-[10px] text-ink-muted">
+                    Primeiros 10 do plano travam esse preço enquanto forem
+                    assinantes.
+                  </p>
+                </>
+              )}
 
-              <div className="mt-3 text-sm text-ink-dim line-through">
-                R$ {cheio}/mês
-              </div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-black">R$ {pio}</span>
+              {ofertaAtiva && (
+                <div className="mt-3 text-sm text-ink-dim line-through">
+                  R$ {cheio}/mês
+                </div>
+              )}
+              <div className={`flex items-baseline gap-1 ${ofertaAtiva ? "" : "mt-3"}`}>
+                <span className="text-4xl font-black">R$ {precoExibido}</span>
                 <span className="text-sm text-ink-dim">/ mês</span>
               </div>
-              <p className="mt-1 text-xs text-ink-muted">
-                Restam <strong className="text-accent">{slots[id]} vagas</strong> por esse preço
-              </p>
+
+              {ofertaAtiva && (
+                <div className="mt-3 rounded-lg border border-accent/30 bg-accent/10 px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60" />
+                      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-accent" />
+                    </span>
+                    <span className="text-sm font-bold text-accent">
+                      {vagasRestantes} de {totalVagas} vagas restantes
+                    </span>
+                  </div>
+                  <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-bg-elevated">
+                    <div
+                      className="h-full bg-accent transition-all"
+                      style={{ width: `${(usadas / totalVagas) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              )}
 
               <p className="mt-3 text-sm text-ink-muted">{p.desc}</p>
 
