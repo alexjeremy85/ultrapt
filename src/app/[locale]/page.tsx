@@ -576,30 +576,8 @@ function Pricing() {
       </div>
 
       <p className="mt-6 text-center text-sm text-ink-dim">
-        Pioneiro trava o preço · Anual paga à vista com 40% off · Sem fidelidade
+        Pioneiro trava o preço · Anual com 2 meses grátis · Sem fidelidade
       </p>
-
-      {/* ROI math */}
-      <div className="mx-auto mt-10 max-w-3xl rounded-2xl border border-border bg-bg-card p-6 md:p-8">
-        <div className="flex items-start gap-4">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/15 text-accent">
-            <CalculatorIcon className="h-5 w-5" />
-          </div>
-          <div>
-            <div className="text-xs font-bold uppercase tracking-[0.2em] text-accent">
-              A conta que importa
-            </div>
-            <h3 className="mt-2 text-xl font-bold leading-snug">
-              1 aluno novo paga o plano. O segundo já é lucro.
-            </h3>
-            <p className="mt-3 text-sm leading-relaxed text-ink-muted">
-              Personal cobra entre <strong className="text-ink">R$ 200 e R$ 500</strong>{" "}
-              por aluno/mês. O plano Pro Pioneiro custa <strong className="text-ink">R$ 39</strong>.
-              Captou 1 aluno via sua página? O Ultra PT já se pagou várias vezes.
-            </p>
-          </div>
-        </div>
-      </div>
     </section>
   );
 }
@@ -629,13 +607,13 @@ function FinalCta({ ctaSignup }: { ctaSignup: string }) {
           <div className="mx-auto mt-6 max-w-xl">
             <div className="rounded-2xl border border-accent/40 bg-bg-surface px-5 py-4 text-left">
               <div className="flex items-baseline gap-2">
-                <span className="text-sm text-ink-dim line-through">R$ 79</span>
-                <span className="text-3xl font-black text-accent">R$ 39</span>
+                <span className="text-sm text-ink-dim line-through">R$ 99</span>
+                <span className="text-3xl font-black text-accent">R$ 79</span>
                 <span className="text-sm text-ink-muted">/ mês</span>
               </div>
               <p className="mt-1 text-sm text-ink-muted">
-                <strong className="text-ink">Pioneiro Pro:</strong> preço travado vitalício pros
-                primeiros 10 que entrarem. Antes do reajuste pra R$ 79.
+                <strong className="text-ink">Pioneiro Pro:</strong> preço travado pros
+                10 primeiros. Depois sobe pra R$ 99/mês.
               </p>
             </div>
           </div>
