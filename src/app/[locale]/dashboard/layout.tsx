@@ -15,6 +15,7 @@ import { trainerUnreadCounts } from "@/lib/chat";
 import { SidebarLink } from "./SidebarLink";
 import { UpgradePulseBanner } from "./UpgradePulseBanner";
 import { MobileBottomNav } from "./MobileBottomNav";
+import { CommunityInviteModal } from "./CommunityInviteModal";
 import { type PlanId } from "@/lib/plans";
 
 export default async function DashboardLayout({
@@ -40,7 +41,7 @@ export default async function DashboardLayout({
   const [{ data: trainer }, { count: studentCount }, unread] = await Promise.all([
     supabase
       .from("trainers")
-      .select("full_name, slug, photo_url, subscription_status, subscription_plan")
+      .select("full_name, slug, photo_url, subscription_status, subscription_plan, community_invite_seen_at")
       .eq("id", user!.id)
       .maybeSingle(),
     supabase
@@ -150,6 +151,7 @@ export default async function DashboardLayout({
         </main>
       </div>
       <MobileBottomNav unreadStudents={unread.total} />
+      <CommunityInviteModal open={!trainer?.community_invite_seen_at} />
     </div>
   );
 }
