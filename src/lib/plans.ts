@@ -30,10 +30,10 @@ export const PLANS: Record<PlanId, Plan> = {
     studentLimit: 5,
     desc: "Pra atender em academia ou começar online.",
     prices: {
-      monthly: 39,
-      monthlyPioneiro: 19,
-      annual: 279,
-      annualPioneiro: 149,
+      monthly: 49,
+      monthlyPioneiro: 39,
+      annual: 497,
+      annualPioneiro: 397,
     },
   },
   pro: {
@@ -42,10 +42,10 @@ export const PLANS: Record<PlanId, Plan> = {
     studentLimit: 30,
     desc: "Pra quem está crescendo a consultoria online.",
     prices: {
-      monthly: 79,
-      monthlyPioneiro: 39,
-      annual: 559,
-      annualPioneiro: 299,
+      monthly: 99,
+      monthlyPioneiro: 79,
+      annual: 997,
+      annualPioneiro: 797,
     },
   },
   escala: {
@@ -54,10 +54,10 @@ export const PLANS: Record<PlanId, Plan> = {
     studentLimit: null,
     desc: "Alunos ilimitados pra quem fechou.",
     prices: {
-      monthly: 99,
-      monthlyPioneiro: 49,
-      annual: 699,
-      annualPioneiro: 379,
+      monthly: 119,
+      monthlyPioneiro: 99,
+      annual: 1197,
+      annualPioneiro: 997,
     },
   },
 };

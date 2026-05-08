@@ -105,9 +105,9 @@ export default async function TermosPage({
         <section>
           <h2 className="mb-2 text-base font-semibold">Cláusula 5ª — Dos Planos Pagos e da Forma de Pagamento</h2>
           <p>5.1. Os Planos Pagos disponíveis são:</p>
-          <p className="mt-2 ml-4">5.1.1. <strong>Plano Solo:</strong> R$ 39,00 mensais (até 5 alunos), em assinatura recorrente sem fidelidade; ou R$ 279,00 à vista no anual (12 meses).</p>
-          <p className="mt-1 ml-4">5.1.2. <strong>Plano Pro:</strong> R$ 79,00 mensais (até 30 alunos), em assinatura recorrente sem fidelidade; ou R$ 559,00 à vista no anual (12 meses).</p>
-          <p className="mt-1 ml-4">5.1.3. <strong>Plano Escala:</strong> R$ 99,00 mensais (alunos ilimitados), em assinatura recorrente sem fidelidade; ou R$ 699,00 à vista no anual (12 meses).</p>
+          <p className="mt-2 ml-4">5.1.1. <strong>Plano Solo:</strong> R$ 49,00 mensais (até 5 alunos), em assinatura recorrente sem fidelidade; ou R$ 497,00 à vista no anual (12 meses).</p>
+          <p className="mt-1 ml-4">5.1.2. <strong>Plano Pro:</strong> R$ 99,00 mensais (até 30 alunos), em assinatura recorrente sem fidelidade; ou R$ 997,00 à vista no anual (12 meses).</p>
+          <p className="mt-1 ml-4">5.1.3. <strong>Plano Escala:</strong> R$ 119,00 mensais (alunos ilimitados), em assinatura recorrente sem fidelidade; ou R$ 1.197,00 à vista no anual (12 meses).</p>
           <p className="mt-2">5.2. O pagamento será processado por meio do gateway Asaas, podendo ser realizado por cartão de crédito, boleto bancário ou Pix, conforme os meios disponibilizados.</p>
           <p className="mt-2">5.3. Os dados de pagamento são coletados, processados e armazenados diretamente pelo Asaas, na qualidade de operador de pagamento, não sendo armazenados pelo ULTRAPT.</p>
           <p className="mt-2">5.4. No plano mensal, o atraso superior a 5 (cinco) dias no pagamento de qualquer parcela acarretará suspensão do acesso à Plataforma, ressalvado o aviso prévio enviado por e-mail. Após suspensão prolongada, a conta retorna ao Plano Free.</p>
@@ -122,8 +122,8 @@ export default async function TermosPage({
 
         <section>
           <h2 className="mb-2 text-base font-semibold">Cláusula 7ª — Do Plano Pioneiro</h2>
-          <p>7.1. O ULTRAPT oferece, em caráter promocional, condição especial denominada &quot;Pioneiro&quot;, com até 50% de desconto sobre o valor cheio, limitada aos 10 (dez) primeiros assinantes em cada plano pago (Solo, Pro e Escala), por ordem cronológica de adesão.</p>
-          <p className="mt-2">7.2. Valores Pioneiro: <strong>Solo R$ 19/mês</strong> (anual R$ 149); <strong>Pro R$ 39/mês</strong> (anual R$ 299); <strong>Escala R$ 49/mês</strong> (anual R$ 379).</p>
+          <p>7.1. O ULTRAPT oferece, em caráter promocional, condição especial denominada &quot;Pioneiro&quot;, com preço reduzido sobre o valor cheio, limitada aos 10 (dez) primeiros assinantes em cada plano pago (Solo, Pro e Escala), por ordem cronológica de adesão.</p>
+          <p className="mt-2">7.2. Valores Pioneiro: <strong>Solo R$ 39/mês</strong> (anual R$ 397); <strong>Pro R$ 79/mês</strong> (anual R$ 797); <strong>Escala R$ 99/mês</strong> (anual R$ 997).</p>
           <p className="mt-2">7.3. Constituem benefícios do Pioneiro: (i) preço travado enquanto a assinatura permanecer ativa e adimplente, mesmo após eventuais reajustes comerciais; e (ii) acesso a canal direto com o fundador para envio de feedback de produto.</p>
           <p className="mt-2">7.4. Perde-se o direito ao Pioneiro nas seguintes hipóteses: (i) cancelamento da assinatura por período superior a 30 (trinta) dias consecutivos; ou (ii) inadimplemento não regularizado no prazo previsto na Cláusula 5.4.</p>
           <p className="mt-2">7.5. Eventual nova adesão posterior à perda do benefício ocorrerá ao preço cheio vigente à época, sem reabertura das vagas Pioneiro.</p>
