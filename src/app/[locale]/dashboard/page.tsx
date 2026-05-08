@@ -11,6 +11,7 @@ import {
 } from "@/components/icons";
 import { trainerUnreadCounts } from "@/lib/chat";
 import { CaptacaoCard } from "./CaptacaoCard";
+import { QuickActions } from "./QuickActions";
 
 export default async function DashboardPage({
   params,
@@ -147,6 +148,9 @@ export default async function DashboardPage({
           Novo treino
         </Link>
       </div>
+
+      {/* Quadro de acoes — atalhos rapidos pras 6 areas principais */}
+      <QuickActions />
 
       {/* Mensagens nao lidas — prioridade max */}
       {studentsWithUnread.length > 0 && (
