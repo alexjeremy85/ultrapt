@@ -34,12 +34,12 @@ const actions: Action[] = [
     icon: <ClipboardIcon className="h-5 w-5" />,
   },
   {
-    href: "/dashboard/profile",
+    href: "/dashboard/files",
     label: "Arquivos",
     icon: <FileTextIcon className="h-5 w-5" />,
   },
   {
-    href: "/dashboard/billing",
+    href: "/dashboard/financeiro",
     label: "Financeiro",
     icon: <CardIcon className="h-5 w-5" />,
   },

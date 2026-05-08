@@ -39,26 +39,26 @@ export function CommunityInviteModal({ open: initialOpen }: { open: boolean }) {
         </div>
 
         <h2 className="text-xl font-bold leading-tight">
-          Ajude a construir o UltraPT
+          Comunidade UltraPT
         </h2>
         <p className="mt-2 text-sm text-ink-muted">
-          Estou desenvolvendo esse app sozinho, com personal trainers reais. Sua
-          opinião é essencial pra evoluir e melhorar a ferramenta no que importa
-          de verdade.
+          O ponto de encontro dos personal trainers que estão crescendo no online.
+          Estratégias do que está funcionando, bastidores do mercado e atualizações
+          do app em primeira mão.
         </p>
 
         <ul className="mt-4 space-y-2.5 text-sm">
           <li className="flex items-start gap-2">
             <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-            <span>Sugira funcionalidades que façam diferença no seu dia a dia</span>
+            <span>Estratégias de captação e impulsionamento testadas</span>
           </li>
           <li className="flex items-start gap-2">
             <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-            <span>Reporte problemas e me ajude a melhorar mais rápido</span>
+            <span>Network direto com outros PTs profissionais</span>
           </li>
           <li className="flex items-start gap-2">
             <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-            <span>Conecte-se com outros PTs que estão testando o app</span>
+            <span>Novidades e funções novas do UltraPT antes de todo mundo</span>
           </li>
         </ul>
 

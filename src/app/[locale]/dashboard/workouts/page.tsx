@@ -20,9 +20,10 @@ export default async function WorkoutsPage({
   const { data: workouts } = await supabase
     .from("workouts")
     .select(
-      "id, name, goal, level, is_template, workout_blocks(count), workout_assignments(count)"
+      "id, name, goal, level, is_template, week_index, weekly_frequency, workout_blocks(count), workout_assignments(count)"
     )
     .eq("trainer_id", user!.id)
+    .order("week_index", { ascending: true })
     .order("created_at", { ascending: false });
 
   return (
@@ -68,16 +69,24 @@ export default async function WorkoutsPage({
               >
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="font-semibold">{w.name}</h3>
-                  {w.is_template && <span className="chip">Template</span>}
+                  <div className="flex flex-wrap gap-1">
+                    {w.week_index && w.week_index > 1 && (
+                      <span className="rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] font-medium text-accent">
+                        Sem {w.week_index}
+                      </span>
+                    )}
+                    {w.is_template && <span className="chip">Template</span>}
+                  </div>
                 </div>
                 {w.goal && (
                   <p className="mt-1 text-sm text-ink-muted line-clamp-2">
                     {w.goal}
                   </p>
                 )}
-                <div className="mt-4 flex gap-4 text-xs text-ink-dim">
+                <div className="mt-4 flex flex-wrap gap-4 text-xs text-ink-dim">
                   <span>{blockCount} blocos</span>
                   <span>{assignedCount} alunos</span>
+                  {w.weekly_frequency && <span>{w.weekly_frequency}x/sem</span>}
                   {w.level && <span>{w.level}</span>}
                 </div>
               </Link>

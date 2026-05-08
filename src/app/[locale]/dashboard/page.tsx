@@ -12,6 +12,8 @@ import {
 import { trainerUnreadCounts } from "@/lib/chat";
 import { CaptacaoCard } from "./CaptacaoCard";
 import { QuickActions } from "./QuickActions";
+import { TutorialCard } from "./TutorialCard";
+import { PulseWidget } from "./PulseWidget";
 
 export default async function DashboardPage({
   params,
@@ -37,13 +39,14 @@ export default async function DashboardPage({
     return null;
   }
 
-  // Pega listas pra acoes pendentes (alunos sem treino + leads + chat)
+  // Pega listas pra acoes pendentes (alunos sem treino + leads + chat + pulso)
   const [
     { data: studentsRaw },
     { count: studentsCount },
     { count: activeStudents },
     { count: workoutCount },
     unread,
+    { data: recentLogs },
   ] = await Promise.all([
     supabase
       .from("students")
@@ -67,6 +70,12 @@ export default async function DashboardPage({
       .select("*", { count: "exact", head: true })
       .eq("trainer_id", user!.id),
     trainerUnreadCounts(),
+    supabase
+      .from("exercise_logs")
+      .select("student_id, executed_at, students!inner(trainer_id)")
+      .eq("students.trainer_id", user!.id)
+      .order("executed_at", { ascending: false })
+      .limit(200),
   ]);
 
   type StudentRow = {
@@ -89,6 +98,27 @@ export default async function DashboardPage({
     .map((s) => ({ student: s, unread: unread.byStudent[s.id] ?? 0 }))
     .filter((x) => x.unread > 0)
     .sort((a, b) => b.unread - a.unread);
+
+  // Pulso: ultima atividade por aluno (mais recente exercise_log)
+  const lastActivityByStudent = new Map<string, string>();
+  for (const log of (recentLogs ?? []) as Array<{ student_id: string; executed_at: string }>) {
+    if (!lastActivityByStudent.has(log.student_id)) {
+      lastActivityByStudent.set(log.student_id, log.executed_at);
+    }
+  }
+  const pulseStudents = all
+    .filter((s) => s.status === "active")
+    .map((s) => ({
+      id: s.id,
+      full_name: s.full_name,
+      photo_url: s.photo_url,
+      lastActivityAt: lastActivityByStudent.get(s.id) ?? null,
+    }))
+    .sort((a, b) => {
+      const av = a.lastActivityAt ? new Date(a.lastActivityAt).getTime() : 0;
+      const bv = b.lastActivityAt ? new Date(b.lastActivityAt).getTime() : 0;
+      return av - bv; // mais antigo primeiro = mais alerta
+    });
 
   const publicUrl = `${getSiteUrl()}/pt/${trainer.slug}`;
   const firstName = (trainer.full_name ?? "").split(" ")[0] || "PT";
@@ -151,6 +181,12 @@ export default async function DashboardPage({
 
       {/* Quadro de acoes — atalhos rapidos pras 6 areas principais */}
       <QuickActions />
+
+      {/* Tutorial pra novos PTs */}
+      {(studentsCount ?? 0) <= 2 && <TutorialCard dismissed={false} />}
+
+      {/* Pulso dos alunos — quem ta ativo, quem ta sumido */}
+      <PulseWidget students={pulseStudents} />
 
       {/* Mensagens nao lidas — prioridade max */}
       {studentsWithUnread.length > 0 && (

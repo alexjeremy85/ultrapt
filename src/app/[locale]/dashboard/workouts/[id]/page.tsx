@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ArrowLeftIcon } from "@/components/icons";
 import { WorkoutBuilder } from "./WorkoutBuilder";
+import { BulkAssignButton } from "./BulkAssignButton";
 
 export default async function WorkoutEditPage({
   params,
@@ -44,6 +45,25 @@ export default async function WorkoutEditPage({
     (a: { position: number }, b: { position: number }) => a.position - b.position
   );
 
+  const { data: studentsRaw } = await supabase
+    .from("students")
+    .select("id, full_name, workout_assignments(workout_id)")
+    .eq("trainer_id", user!.id)
+    .order("full_name", { ascending: true });
+  const studentList = (studentsRaw ?? []).map(
+    (s: {
+      id: string;
+      full_name: string;
+      workout_assignments: Array<{ workout_id: string }>;
+    }) => ({
+      id: s.id,
+      full_name: s.full_name,
+      hasThisWorkout: (s.workout_assignments ?? []).some(
+        (wa) => wa.workout_id === workout.id
+      ),
+    })
+  );
+
   return (
     <div className="space-y-6">
       <div>
@@ -63,7 +83,16 @@ export default async function WorkoutEditPage({
               {workout.duration_weeks && (
                 <span>· {workout.duration_weeks} semanas</span>
               )}
+              {workout.weekly_frequency && (
+                <span>· {workout.weekly_frequency}x/sem</span>
+              )}
+              {workout.week_index && workout.week_index > 1 && (
+                <span>· semana {workout.week_index}</span>
+              )}
             </div>
+          </div>
+          <div className="shrink-0">
+            <BulkAssignButton workoutId={workout.id} students={studentList} />
           </div>
         </div>
       </div>
