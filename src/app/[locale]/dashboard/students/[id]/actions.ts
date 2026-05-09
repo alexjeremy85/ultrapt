@@ -20,6 +20,14 @@ export async function recordStudentPayment(formData: FormData) {
     return { ok: false, error: "Preencha valor e mes de referencia" };
   }
 
+  const amount = Number(amountRaw);
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return { ok: false, error: "Valor deve ser maior que zero" };
+  }
+  if (amount > 100000) {
+    return { ok: false, error: "Valor acima do limite permitido" };
+  }
+
   const { data: student } = await supabase
     .from("students")
     .select("id")
@@ -35,7 +43,7 @@ export async function recordStudentPayment(formData: FormData) {
   const { error } = await supabase.from("student_payments").insert({
     student_id: studentId,
     trainer_id: user.id,
-    amount: Number(amountRaw),
+    amount,
     reference_month: referenceMonth,
     notes,
   });
