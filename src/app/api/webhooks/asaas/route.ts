@@ -77,15 +77,35 @@ export async function POST(request: Request) {
     });
   }
 
-  // Resolve trainer pelo externalReference (preferido) ou customer
+  // Defense-in-depth: pra eventos que ELEVAM status (active), exigimos
+  // externalReference. Se rolasse vazamento do ASAAS_WEBHOOK_TOKEN, atacante
+  // ainda precisaria do trainer.id (UUID) pra forjar ativacao. Customer
+  // fallback fica apenas pra eventos de queda de status (atraso/cancelamento)
+  // onde forjar nao da vantagem ao atacante (e ate prejudicaria ele).
   const ref =
     body.payment?.externalReference || body.subscription?.externalReference;
   const customer = body.payment?.customer || body.subscription?.customer;
 
+  const elevatingEvents = new Set(["PAYMENT_CONFIRMED", "PAYMENT_RECEIVED"]);
+  const isElevating = elevatingEvents.has(body.event);
+
   let trainerId: string | null = null;
   if (ref) {
-    trainerId = ref;
-  } else if (customer) {
+    // Sanidade extra: ref tem que ser UUID (trainer.id). Bloqueia injecao de
+    // string aleatoria no campo externalReference.
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (uuidRegex.test(ref)) {
+      trainerId = ref;
+    } else {
+      console.warn("[asaas-webhook] externalReference invalid format", {
+        event: body.event,
+        ref,
+      });
+    }
+  }
+
+  if (!trainerId && !isElevating && customer) {
+    // Customer lookup APENAS pra eventos nao-elevatorios.
     const { data, error: lookupErr } = await supabase
       .from("trainers")
       .select("id")
@@ -102,10 +122,11 @@ export async function POST(request: Request) {
   }
 
   if (!trainerId) {
-    console.warn("[asaas-webhook] no trainer matched", {
+    console.warn("[asaas-webhook] no trainer matched (or elevation without ref)", {
       event: body.event,
-      ref,
-      customer,
+      isElevating,
+      hasRef: Boolean(ref),
+      hasCustomer: Boolean(customer),
     });
     return NextResponse.json({ ok: true, note: "no trainer" });
   }
