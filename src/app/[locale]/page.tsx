@@ -125,7 +125,7 @@ function Hero({
         <ul className="mt-9 grid grid-cols-1 gap-2 text-sm text-ink-muted sm:grid-cols-2 max-w-md">
           <li className="flex items-center gap-2">
             <CheckIcon className="h-4 w-4 text-accent" />
-            14 dias grátis sem cartão
+            Grátis pra sempre com até 2 alunos
           </li>
           <li className="flex items-center gap-2">
             <CheckIcon className="h-4 w-4 text-accent" />
@@ -133,7 +133,7 @@ function Hero({
           </li>
           <li className="flex items-center gap-2">
             <CheckIcon className="h-4 w-4 text-accent" />
-            Sem taxa de setup
+            Sem cartão. Sem taxa de setup
           </li>
           <li className="flex items-center gap-2">
             <CheckIcon className="h-4 w-4 text-accent" />
@@ -665,9 +665,9 @@ function FinalCta({ ctaSignup }: { ctaSignup: string }) {
 
           <ul className="mx-auto mt-8 grid max-w-2xl grid-cols-1 gap-3 text-left text-sm sm:grid-cols-3">
             <GuaranteeItem>
-              <strong className="text-ink">14 dias grátis</strong>
+              <strong className="text-ink">Grátis pra sempre</strong>
               <br />
-              sem cadastrar cartão
+              com até 2 alunos, sem cartão
             </GuaranteeItem>
             <GuaranteeItem>
               <strong className="text-ink">Cancela com 1 clique</strong>
