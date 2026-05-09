@@ -6,7 +6,7 @@
   },
   "Landing": {
     "subtitle": "Capte alunos, faça anamneses, prescreva treinos e cobre mensalidades automaticamente. Tudo num só lugar.",
-    "cta_signup": "Começar grátis por 14 dias",
+    "cta_signup": "Começar grátis com 2 alunos",
     "cta_login": "Já tenho conta",
     "nav_login": "Entrar",
     "nav_signup": "Criar conta"
@@ -15,7 +15,7 @@
     "login_title": "Entrar no Ultra PT",
     "login_subtitle": "Acesse seu painel de personal.",
     "signup_title": "Crie sua conta",
-    "signup_subtitle": "14 dias grátis. Sem cartão.",
+    "signup_subtitle": "Grátis com até 2 alunos. Sem cartão.",
     "field_full_name": "Nome completo",
     "field_email": "E-mail",
     "field_email_pro": "E-mail profissional",
