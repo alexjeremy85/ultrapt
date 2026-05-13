@@ -74,18 +74,20 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Subscription gate: 'free' e 'active' passam direto.
-  // 'pending_payment' tambem pode usar (acabou de iniciar). 'past_due' e
-  // 'canceled' caem em /billing pra regularizar.
+  // Subscription gate: por padrao TODO mundo passa pro dashboard.
+  // So caem em /billing os estados explicitos de problema (past_due,
+  // canceled). Isso evita que status legado (trialing, trial_expired,
+  // qualquer valor desconhecido) prenda o usuario na pagina de billing.
+  // free/active/pending_payment passam. NULL passa (sem trainer ainda).
   if (user && isAppRoute && !isBillingRoute) {
     const { data: trainer } = await supabase
       .from("trainers")
       .select("subscription_status")
       .eq("id", user.id)
       .maybeSingle();
-    const status = trainer?.subscription_status ?? "free";
-    const allowed = status === "free" || status === "active" || status === "pending_payment";
-    if (!allowed) {
+    const status = trainer?.subscription_status;
+    const mustRegularize = status === "past_due" || status === "canceled";
+    if (mustRegularize) {
       const url = request.nextUrl.clone();
       const localeMatch = request.nextUrl.pathname.match(/^\/([a-z]{2}(-[A-Z]{2})?)\//);
       const localePrefix = localeMatch ? `/${localeMatch[1]}` : "";
