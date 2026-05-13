@@ -1,7 +1,9 @@
 import { setRequestLocale } from "next-intl/server";
 import { Link, redirect } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { ArrowRightIcon } from "@/components/icons";
+import { ArrowRightIcon, UsersIcon } from "@/components/icons";
+import { computeStudentLimit } from "@/lib/student-limit";
+import { type PlanId, PLANS } from "@/lib/plans";
 import { quickStart } from "./actions";
 
 export default async function OnboardingPage({
@@ -9,17 +11,66 @@ export default async function OnboardingPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; limit?: string }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const { error } = await searchParams;
+  const { error, limit: limitFlag } = await searchParams;
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect({ href: "/login", locale });
+
+  const [{ data: trainer }, { count: studentCount }] = await Promise.all([
+    supabase
+      .from("trainers")
+      .select("subscription_plan")
+      .eq("id", user!.id)
+      .maybeSingle(),
+    supabase
+      .from("students")
+      .select("*", { count: "exact", head: true })
+      .eq("trainer_id", user!.id),
+  ]);
+  const planId = (trainer?.subscription_plan ?? "free") as PlanId;
+  const limitInfo = computeStudentLimit(planId, studentCount ?? 0);
+
+  if (limitInfo.atLimit) {
+    return (
+      <div className="mx-auto max-w-xl space-y-6">
+        <div className="rounded-2xl border-2 border-accent bg-gradient-to-br from-accent/10 to-transparent p-6 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-accent/20 text-accent">
+            <UsersIcon className="h-7 w-7" />
+          </div>
+          <h1 className="mt-4 text-xl font-bold">
+            Limite do plano {PLANS[planId].name} atingido
+          </h1>
+          <p className="mt-2 text-sm text-ink-muted">
+            Você já cadastrou{" "}
+            <strong className="text-ink">
+              {studentCount} de {limitInfo.studentLimit}
+            </strong>{" "}
+            alunos. Faz upgrade pra continuar.
+          </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-2">
+            <Link href="/dashboard/billing" className="btn-primary">
+              Fazer upgrade
+            </Link>
+            <Link href="/dashboard" className="btn-ghost">
+              Voltar pro painel
+            </Link>
+          </div>
+          {limitFlag === "1" && (
+            <p className="mt-4 text-xs text-ink-dim">
+              Você tentou cadastrar mais um aluno, mas precisa de plano maior.
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-xl space-y-6">

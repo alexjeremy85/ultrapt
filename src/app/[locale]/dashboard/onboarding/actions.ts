@@ -43,9 +43,7 @@ export async function quickStart(formData: FormData) {
   const limit = computeStudentLimit(planId, studentCount ?? 0);
   if (limit.atLimit) {
     redirect({
-      href: `/dashboard/billing?error=${encodeURIComponent(
-        `Limite do plano atingido. Faca upgrade pra cadastrar mais alunos.`
-      )}`,
+      href: `/dashboard/onboarding?limit=1`,
       locale,
     });
   }
