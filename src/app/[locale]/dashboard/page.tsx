@@ -12,7 +12,7 @@ import {
 import { trainerUnreadCounts } from "@/lib/chat";
 import { CaptacaoCard } from "./CaptacaoCard";
 import { QuickActions } from "./QuickActions";
-import { TutorialCard } from "./TutorialCard";
+// import { TutorialCard } from "./TutorialCard"; // escondido ate video oficial
 import { PulseWidget } from "./PulseWidget";
 
 export default async function DashboardPage({
@@ -182,8 +182,10 @@ export default async function DashboardPage({
       {/* Quadro de acoes — atalhos rapidos pras 6 areas principais */}
       <QuickActions />
 
-      {/* Tutorial pra novos PTs */}
-      {(studentsCount ?? 0) <= 2 && <TutorialCard dismissed={false} />}
+      {/* Tutorial pra novos PTs — escondido ate o video oficial ser gravado.
+          Quando subir o video no YouTube, atualizar TUTORIAL_VIDEO_ID em
+          TutorialCard.tsx e remover o comentario abaixo. */}
+      {/* {(studentsCount ?? 0) <= 2 && <TutorialCard dismissed={false} />} */}
 
       {/* Pulso dos alunos — quem ta ativo, quem ta sumido */}
       <PulseWidget students={pulseStudents} />
