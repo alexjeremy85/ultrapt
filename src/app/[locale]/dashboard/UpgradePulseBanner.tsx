@@ -20,10 +20,13 @@ export function UpgradePulseBanner({
 
   const atLimit = studentLimit !== null && studentCount >= studentLimit;
   const nearLimit =
-    studentLimit !== null && studentCount >= Math.max(1, studentLimit - 1);
+    studentLimit !== null && studentCount === studentLimit - 1;
 
-  // Free: sempre mostra. Outros status nao-active mostram se near-limit ou past_due.
-  const shouldShow = planId === "free" || atLimit || nearLimit || status === "past_due";
+  // So mostra em 3 situacoes concretas: pagamento pendente, ja no limite,
+  // ou faltando 1 aluno pro limite. Free user com folga (ex: 0/2 ou 1/2 com
+  // limite=2 ja conta como nearLimit mas nao incomoda) NAO recebe banner sem
+  // motivo. Sai do meio do caminho enquanto ele esta usando o produto.
+  const shouldShow = status === "past_due" || atLimit || nearLimit;
   if (!shouldShow) return null;
 
   let title: string;
@@ -38,14 +41,10 @@ export function UpgradePulseBanner({
     title = `Limite atingido — ${studentCount}/${studentLimit} alunos`;
     body = "Faz upgrade pra cadastrar mais alunos agora.";
     cta = "Fazer upgrade";
-  } else if (nearLimit) {
-    title = `Você está no limite — ${studentCount}/${studentLimit} alunos`;
-    body = "Faltam poucas vagas. Garante seu Pioneiro com preço travado.";
-    cta = "Ver planos";
   } else {
-    title = "Pioneiro: 50% off vitalício";
-    body = "Trava o preço com Pro Pioneiro a R$ 39 ou Solo a R$ 19.";
-    cta = "Quero o Pioneiro";
+    title = `${studentCount}/${studentLimit} alunos — falta 1 pro limite`;
+    body = "Trava preço Pioneiro antes das vagas esgotarem.";
+    cta = "Ver planos";
   }
 
   return (
