@@ -25,8 +25,11 @@ export async function login(formData: FormData) {
   });
 
   if (error) {
+    // LGPD: nao logamos email em texto. emailHash = ofuscacao simples
+    // (primeiras 3 letras + dominio) so pra correlacionar suporte.
+    const emailHash = `${email.slice(0, 3)}***@${email.split("@")[1] ?? "?"}`;
     console.warn("[login] failed", {
-      email,
+      emailHash,
       code: error.code,
       message: error.message,
       status: error.status,
@@ -37,7 +40,7 @@ export async function login(formData: FormData) {
     });
   }
 
-  console.log("[login] success", { userId: data.user?.id, email });
+  console.log("[login] success", { userId: data.user?.id });
   revalidatePath("/", "layout");
   redirect({ href: "/dashboard", locale });
 }

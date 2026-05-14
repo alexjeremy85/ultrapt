@@ -54,8 +54,11 @@ export async function signup(formData: FormData) {
   });
 
   if (error) {
+    // LGPD: nao logamos email em texto. emailHash = primeiras 3 letras +
+    // dominio, suficiente pra correlacionar suporte sem expor PII.
+    const emailHash = `${email.slice(0, 3)}***@${email.split("@")[1] ?? "?"}`;
     console.error("[signup] supabase signUp failed", {
-      email,
+      emailHash,
       code: error.code,
       message: error.message,
       status: error.status,
@@ -91,7 +94,6 @@ export async function signup(formData: FormData) {
   if (data.session) {
     console.log("[signup] success with active session", {
       userId: data.user?.id,
-      email,
     });
     revalidatePath("/", "layout");
     redirect({ href: "/dashboard", locale });
@@ -99,7 +101,6 @@ export async function signup(formData: FormData) {
 
   console.log("[signup] success awaiting email confirmation", {
     userId: data.user?.id,
-    email,
   });
   redirect({
     href: `/login?error=${encodeURIComponent(t("Auth.confirm_email_message"))}`,

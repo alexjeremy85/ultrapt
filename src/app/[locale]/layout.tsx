@@ -5,6 +5,7 @@ import { setRequestLocale, getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { NavigationProgress } from "@/components/NavigationProgress";
+import { CookieBanner } from "@/components/CookieBanner";
 
 export const metadata: Metadata = {
   title: "Ultra Personal Trainer",
@@ -60,6 +61,7 @@ export default async function LocaleLayout({
         </Suspense>
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
+          <CookieBanner />
         </NextIntlClientProvider>
       </body>
     </html>

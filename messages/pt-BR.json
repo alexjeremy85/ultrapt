@@ -143,7 +143,7 @@
     "field_medical_clearance": "Tem liberação médica para atividade física?",
     "yes": "Sim",
     "no": "Não",
-    "field_consent": "Autorizo o uso dos meus dados para acompanhamento profissional.",
+    "field_consent": "Estou ciente de que este formulário coleta dados sensíveis de saúde (condições médicas, medicações, lesões, dados antropométricos), nos termos do Art. 11 da LGPD. Autorizo expressamente o uso destes dados pelo meu Personal Trainer (controlador) e pela plataforma UltraPT (operadora) exclusivamente para prescrição e acompanhamento do meu treino. Li a Política de Privacidade.",
     "field_photo": "Sua foto (opcional)",
     "photo_helper": "Ajuda seu personal te identificar. Foto de rosto, JPG ou PNG.",
     "section_training": "Histórico de treino",

@@ -5,6 +5,7 @@ import { getSiteUrl } from "@/lib/site-url";
 import { ExternalLinkIcon } from "@/components/icons";
 import { logout } from "../../(auth)/login/actions";
 import { ProfileForm } from "./ProfileForm";
+import { LgpdSection } from "./LgpdSection";
 
 const FULL_COLS = "*";
 const BASE_COLS =
@@ -28,12 +29,12 @@ export default async function ProfilePage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ error?: string; success?: string }>;
+  searchParams: Promise<{ error?: string; success?: string; delete_error?: string }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations();
-  const { error, success } = await searchParams;
+  const { error, success, delete_error: deleteError } = await searchParams;
 
   const supabase = await createClient();
   const {
@@ -119,6 +120,10 @@ export default async function ProfilePage({
 
       {/* @ts-expect-error trainer shape compativel via fallback */}
       <ProfileForm trainer={trainer} publicUrl={publicUrl} />
+
+      <LgpdSection
+        deleteError={deleteError ? decodeURIComponent(deleteError) : null}
+      />
 
       {/* Atalhos extras pra mobile (que nao tem sidebar) */}
       <div className="border-t border-border pt-4 space-y-2">
