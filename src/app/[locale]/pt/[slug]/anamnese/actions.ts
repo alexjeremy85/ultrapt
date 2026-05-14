@@ -150,10 +150,10 @@ export async function submitAnamnesis(formData: FormData) {
     .single();
 
   if (error) {
+    // LGPD: nao logamos fullName em texto (PII do aluno).
     console.error("[anamnesis] insert failed", {
       trainerId,
       slug,
-      fullName,
       code: error.code,
       message: error.message,
       details: error.details,
