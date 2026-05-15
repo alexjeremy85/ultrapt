@@ -1,6 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { BoldTemplate } from "./templates/BoldTemplate";
 import { MinimalTemplate } from "./templates/MinimalTemplate";
 import { EnergyTemplate } from "./templates/EnergyTemplate";
@@ -36,7 +36,11 @@ export default async function PublicTrainerPage({
   const { locale, slug } = await params;
   setRequestLocale(locale);
 
-  const supabase = await createClient();
+  // Pagina publica: usa admin client (bypassa RLS de authenticated, que
+  // limita PT logado a ler so a propria linha — quebrava acesso ao link de
+  // outros PTs). Whitelist explicita de FULL_COLS / BASE_COLS abaixo evita
+  // leak de colunas sensiveis (CPF, asaas_*).
+  const supabase = createAdminClient();
 
   // 1) Tenta com todas as colunas (migration 0008 aplicada)
   let trainer: TrainerProfile | null = null;
