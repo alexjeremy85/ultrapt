@@ -1,6 +1,6 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { CheckIcon } from "@/components/icons";
 import { AnamnesisForm } from "./AnamnesisForm";
 
@@ -16,7 +16,11 @@ export default async function AnamnesisPage({
   setRequestLocale(locale);
   const t = await getTranslations();
 
-  const supabase = await createClient();
+  // Pagina publica: usa admin client com whitelist explicita de colunas safe.
+  // RLS de authenticated so deixa o trainer ler propria linha; sem isso, PT
+  // logado visitando link de outro PT (ou ate o proprio, em alguns casos de
+  // cookie/cache) tomava 404.
+  const supabase = createAdminClient();
   const { data: trainer } = await supabase
     .from("trainers")
     .select("id, full_name, slug, photo_url")
@@ -49,8 +53,8 @@ export default async function AnamnesisPage({
     <main className="min-h-screen bg-bg">
       <div className="mx-auto max-w-2xl px-5 py-10">
         <div className="card">
-          <div className="mb-6 flex items-center gap-3">
-            <div className="h-12 w-12 overflow-hidden rounded-full bg-bg-elevated">
+          <div className="mb-6 flex flex-col items-center text-center">
+            <div className="h-24 w-24 overflow-hidden rounded-full bg-bg-elevated ring-2 ring-accent/40 shadow-lg">
               {trainer.photo_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -59,14 +63,20 @@ export default async function AnamnesisPage({
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center text-sm font-bold text-accent">
+                <div className="flex h-full w-full items-center justify-center text-3xl font-bold text-accent">
                   {trainer.full_name.charAt(0).toUpperCase()}
                 </div>
               )}
             </div>
-            <div>
+            <div className="mt-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-accent">
+                Seu Personal Trainer
+              </p>
+              <p className="mt-0.5 text-lg font-bold">{trainer.full_name}</p>
+            </div>
+            <div className="mt-5">
               <h1 className="text-xl font-bold">{t("Anamnesis.title")}</h1>
-              <p className="text-sm text-ink-muted">
+              <p className="mt-1 text-sm text-ink-muted">
                 {t("Anamnesis.subtitle", { trainerName: trainer.full_name })}
               </p>
             </div>
